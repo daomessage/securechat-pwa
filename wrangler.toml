@@ -1,0 +1,14 @@
+# Cloudflare Pages project configuration
+# 用于 `wrangler pages deploy dist/` 命令行部署(可选,CF 后台 Git 集成后这个文件不是必需)
+
+name = "daomessage-pwa"
+compatibility_date = "2026-04-17"
+pages_build_output_dir = "dist"
+
+# 生产环境显式声明(CF Dashboard 可覆盖)
+[env.production]
+name = "daomessage-pwa"
+
+# 预览环境
+[env.preview]
+name = "daomessage-pwa-preview"

@@ -13,21 +13,24 @@ if (import.meta.env.VITE_API_BASE) {
 }
 
 export function initIMClient() {
-  // connect() 是 async（P2-FIX-#11：先获取 ticket 再建连），fire-and-forget + catch 防 unhandled rejection
+  // connect() 是 async，fire-and-forget + catch 防 unhandled rejection
   client.connect().catch(err => console.warn('[WS] connect error:', err));
 }
 
-// ── 事件总线 ──
+// ── 事件总线（兼容层，保持 0.2.x Set 订阅接口）──
 export const localMessageHandlers     = new Set<(msg: StoredMessage) => void>();
 export const localStatusHandlers      = new Set<(status: { id: string; status: string }) => void>();
 export const networkListeners         = new Set<(state: NetworkState) => void>();
 export const localChannelPostHandlers = new Set<(data: any) => void>();
 export const localTypingHandlers      = new Set<(data: TypingEvent) => void>();
 
-// 分发
-client.on('message',      (msg)    => {
+// ── 把 0.4.0 Observable 流 bridge 成 Set 订阅 ──
+
+// message：每条到达消息
+client.events.message.subscribe((msg) => {
+  if (!msg) return;
   localMessageHandlers.forEach(h => h(msg));
-  // 未读计数：非自己发的消息 && 当前不在该会话聊天界面
+  // 未读计数
   if (!msg.isMe && msg.conversationId) {
     const { activeChatId, incrementUnread } = useAppStore.getState();
     if (activeChatId !== msg.conversationId) {
@@ -35,10 +38,29 @@ client.on('message',      (msg)    => {
     }
   }
 });
-client.on('status_change',(status) => localStatusHandlers.forEach(h => h(status)));
-client.on('network_state',(state)  => networkListeners.forEach(h => h(state)));
-client.on('channel_post', (data)   => localChannelPostHandlers.forEach(h => h(data)));
-client.on('typing',       (data)   => localTypingHandlers.forEach(h => h(data)));
+
+// messageStatus：发送回执
+client.events.messageStatus.subscribe((s) => {
+  if (!s) return;
+  localStatusHandlers.forEach(h => h(s));
+});
+
+// network
+client.events.network.subscribe((state) => {
+  networkListeners.forEach(h => h(state));
+});
+
+// channelPost
+client.events.channelPost.subscribe((data) => {
+  if (!data) return;
+  localChannelPostHandlers.forEach(h => h(data));
+});
+
+// typing
+client.events.typing.subscribe((ev) => {
+  if (!ev) return;
+  localTypingHandlers.forEach(h => h(ev));
+});
 
 export function onNetworkStateChange(fn: (state: NetworkState) => void) {
   networkListeners.add(fn);
@@ -46,8 +68,7 @@ export function onNetworkStateChange(fn: (state: NetworkState) => void) {
 }
 
 /**
- * 类型安全的通话模块访问器（绕过 SDK 编译包类型樣板回落问题）
- * SecureChatClient.calls 属性在 initCalls() 后动态注入。
+ * 类型安全的通话模块访问器
  */
 export type CallModuleAny = {
   call(toAliasId: string, opts?: { audio?: boolean; video?: boolean }): Promise<void>;

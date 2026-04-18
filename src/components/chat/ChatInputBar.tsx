@@ -58,26 +58,26 @@ export function ChatInputBar({
     setInputText('');
     const rid = replyTo?.id;
     onClearReply();
-    await client.sendMessage(activeChatId, sessionInfo.theirAliasId, text, rid || undefined);
+    await client.messages.send({ conversationId: activeChatId, toAliasId: sessionInfo.theirAliasId, text, replyToId: rid || undefined });
     onMessageSent();
   });
 
   const { execute: sendImage, isProcessing: isSendingImage } = useSdkAction(async (file: File) => {
     if (!activeChatId || !sessionInfo?.theirAliasId) return;
     const thumbnail = await generateBlurryThumbnail(file);
-    await client.sendImage(activeChatId, sessionInfo.theirAliasId, file, thumbnail);
+    await client.media.sendImage(activeChatId, file, { thumbnail } as any);
     onMessageSent();
   });
 
   const { execute: sendFile, isProcessing: isSendingFile } = useSdkAction(async (file: File) => {
     if (!activeChatId || !sessionInfo?.theirAliasId) return;
-    await client.sendFile(activeChatId, sessionInfo.theirAliasId, file);
+    await client.media.sendFile(activeChatId, file);
     onMessageSent();
   });
 
   const { execute: sendVoice, isProcessing: isSendingVoice } = useSdkAction(async (args: { blob: Blob; durationMs: number }) => {
     if (!activeChatId || !sessionInfo?.theirAliasId) return;
-    await client.sendVoice(activeChatId, sessionInfo.theirAliasId, args.blob, args.durationMs);
+    await client.media.sendVoice(activeChatId, args.blob, args.durationMs);
     onMessageSent();
   });
 
@@ -138,7 +138,7 @@ export function ChatInputBar({
     clearTimeout(selfTypingTimerRef.current);
     selfTypingTimerRef.current = window.setTimeout(() => {
       if (activeChatId && sessionInfo?.theirAliasId && e.target.value.trim()) {
-        client.sendTyping(activeChatId, sessionInfo.theirAliasId);
+        client.messages.sendTyping(activeChatId, sessionInfo.theirAliasId);
       }
     }, 400);
   };
@@ -172,7 +172,7 @@ export function ChatInputBar({
   };
 
   return (
-    <div className="shrink-0 bg-zinc-950 px-4 py-3 border-t border-zinc-900 pb-safe relative" style={{ paddingBottom: 'calc(1rem + env(safe-area-inset-bottom))' }}>
+    <div className="shrink-0 bg-zinc-950 px-4 py-3 border-t border-zinc-900 pb-safe pb-4 relative">
       {replyTo && (
         <div className="flex items-center gap-2 mb-2 bg-zinc-900 border border-zinc-800 rounded-xl px-3 py-2 max-w-2xl mx-auto">
           <Reply className="w-4 h-4 text-blue-400 shrink-0 pointer-events-none" />

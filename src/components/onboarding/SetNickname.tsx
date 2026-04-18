@@ -21,7 +21,7 @@ export function SetNickname() {
       // 场景：用户在同一浏览器注销后重新注册，旧的 IndexedDB sessions/messages 仍残留
       // 不清除会导致新账号登录后直接看到旧账号的联系人和消息列表
       try {
-        await client.clearAllHistory(); // 清除 IndexedDB messages + sessions
+        await client.messages.clearAllConversations(); // 清除 IndexedDB messages + sessions
         await clearIdentity();          // 清除 IndexedDB identity
       } catch (_) { /* 首次注册时无旧数据，忽略错误 */ }
       // 清除 localStorage 旧账号信息

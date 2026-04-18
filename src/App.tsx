@@ -1,6 +1,5 @@
 import { useEffect, useState } from 'react';
 import { useAppStore } from './store/appStore';
-import { useVisualViewport } from './hooks/useVisualViewport';
 import { Welcome }          from './components/onboarding/Welcome';
 import { GenerateMnemonic } from './components/onboarding/GenerateMnemonic';
 import { ConfirmBackup }   from './components/onboarding/ConfirmBackup';
@@ -14,14 +13,11 @@ import { initIMClient, client, getCallModule } from './lib/imClient';
 import { clearIdentity, loadIdentity, deriveIdentity } from '@daomessage_sdk/sdk';
 
 // ⚡ 版本戳：如果 Console 里能看到这行，说明浏览器已加载最新代码
-console.log('✅ [DAO Message PWA] v1.0.0 loaded');
+console.log('🔥 [SecureChat] BUILD v20260406-2217 loaded');
 
 function App() {
   const { route, activeChatId, setRoute, setSdkReady, setUserInfo, setActiveChatId, setDeferredPrompt } = useAppStore();
   const [goawayVisible, setGoawayVisible] = useState(false);
-
-  // 全局键盘/视口监听 — 写 CSS 变量 --vv-height,iOS 键盘弹起时 ChatWindow 自动避让
-  useVisualViewport();
 
   // ① 📦 拦截 Chrome PWA 安装事件
   useEffect(() => {
@@ -49,21 +45,22 @@ function App() {
 
   // ② GOAWAY 监听：被其他设备踢下线时弹出全屏提示
   useEffect(() => {
-    return client.on('goaway', (_reason) => {
-      setGoawayVisible(true);
+    const sub = client.events.goaway.subscribe((ev) => {
+      if (ev) setGoawayVisible(true);
     });
+    return () => sub.unsubscribe();
   }, []);
 
   // ③ 冷启动检测（强制 active 标志位防止 React 18 并发抢占）
   useEffect(() => {
     let active = true; 
     
-    client.restoreSession().then(session => {
+    client.auth.restoreSession().then(session => {
       if (!active) return; 
 
       if (session) {
         const params = new URLSearchParams(window.location.search);
-        const chatId = params.get('chat_id') || params.get('chat');
+        const chatId = params.get('chat');
 
         const nickname = session.nickname || localStorage.getItem('sc_nickname') || 'Me';
         setUserInfo('', session.aliasId, nickname);

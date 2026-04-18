@@ -4,7 +4,6 @@ import { useAppStore } from '../../store/appStore';
 import { loadIdentity, clearIdentity } from '@daomessage_sdk/sdk';
 import { LogOut, Copy, Fingerprint, Activity, Download, Bell, Store, Loader2 } from 'lucide-react';
 import { useSdkAction } from '../../hooks/useSdkAction';
-import { PwaDiagnostics } from '../pwa/PwaDiagnostics';
 
 export function SettingsTab() {
   const { setRoute, setUserInfo, setSdkReady, aliasId, nickname } = useAppStore();
@@ -31,7 +30,7 @@ export function SettingsTab() {
     if (!confirm('清理本地身份将无法恢复。如果您没有保存助记词，所有资产与聊天关系将丢失。确认退出？')) return;
     client.disconnect();
     await clearIdentity();
-    await client.clearAllHistory();
+    await client.messages.clearAllConversations();
     localStorage.removeItem('sc_token');
     localStorage.removeItem('sc_uuid');
     localStorage.removeItem('sc_alias_id');
@@ -53,7 +52,7 @@ export function SettingsTab() {
 
   const handleExport = async () => {
     try {
-      const blobURL = await client.exportConversation('all');
+      const blobURL = await client.messages.exportAll();
       const a = document.createElement('a');
       a.href = blobURL;
       a.download = `securechat_backup_${new Date().toISOString().split('T')[0]}.ndjson`;
@@ -139,9 +138,6 @@ export function SettingsTab() {
           </div>
         </div>
       </div>
-
-      {/* PWA 诊断 */}
-      <PwaDiagnostics />
 
       <button className="w-full flex items-center justify-center gap-2 py-4 bg-red-500/10 hover:bg-red-500/20 text-red-500 rounded-2xl font-medium transition-colors mt-8" onClick={handleLogout}>
         <LogOut className="w-5 h-5 pointer-events-none" /> 彻底销毁本地记录并退出

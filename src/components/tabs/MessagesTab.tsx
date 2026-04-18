@@ -3,16 +3,22 @@ import { listSessions } from '@daomessage_sdk/sdk';
 import type { SessionRecord, StoredMessage } from '@daomessage_sdk/sdk';
 import { client, localMessageHandlers } from '../../lib/imClient';
 import { useAppStore } from '../../store/appStore';
-import { ShieldCheck, ShieldAlert, Trash2 } from 'lucide-react';
+import { ShieldCheck, ShieldAlert, Smartphone, X, Trash2 } from 'lucide-react';
 
 type SessionWithPreview = SessionRecord & { lastMessage?: StoredMessage };
 
 export function MessagesTab() {
   const { setActiveChatId, unreadCounts, clearUnread } = useAppStore();
   const [sessions, setSessions] = useState<SessionWithPreview[]>([]);
+  const [showPwaBanner, setShowPwaBanner] = useState(false);
   const [deleteTarget, setDeleteTarget] = useState<SessionWithPreview | null>(null);
-  // 注:原来的"当前为浏览器模式"横幅已迁移到全局 <InstallBanner />(src/components/pwa/InstallBanner.tsx),
-  //     它同时支持 iOS Safari 引导 + Android 一键安装 + 7 天内不打扰。
+
+  // PWA standalone 检测
+  useEffect(() => {
+    const isPWA = window.matchMedia('(display-mode: standalone)').matches
+      || (navigator as any).standalone === true;
+    if (!isPWA) setShowPwaBanner(true);
+  }, []);
 
   const loadSessionsWithPreviews = async () => {
     const rawSessions = await listSessions();
@@ -26,7 +32,7 @@ export function MessagesTab() {
     } catch {}
 
     const withPreviews = await Promise.all(rawSessions.map(async s => {
-      const history = await client.getHistory(s.conversationId);
+      const history = await client.messages.getHistory(s.conversationId);
       return { ...s, lastMessage: history[history.length - 1] };
     }));
 
@@ -63,7 +69,7 @@ export function MessagesTab() {
 
   const handleDeleteChat = async () => {
     if (!deleteTarget) return;
-    await client.clearHistory(deleteTarget.conversationId);
+    await client.messages.clearHistory(deleteTarget.conversationId);
     clearUnread(deleteTarget.conversationId);
     setDeleteTarget(null);
     loadSessionsWithPreviews();
@@ -72,9 +78,27 @@ export function MessagesTab() {
   return (
     <div className="flex-1 w-full bg-zinc-950">
       <div className="p-4 border-b border-zinc-900 sticky top-0 bg-zinc-950 z-10">
-        <h1 className="text-xl font-bold">DAO Message</h1>
+        <h1 className="text-xl font-bold">SecureChat</h1>
       </div>
 
+      {/* PWA 安装提示横幅 */}
+      {showPwaBanner && (
+        <div className="mx-3 mt-3 bg-blue-600/10 border border-blue-500/20 rounded-xl px-4 py-3 flex items-center gap-3">
+          <Smartphone className="w-5 h-5 text-blue-400 shrink-0 pointer-events-none" />
+          <div className="flex-1 min-w-0">
+            <span className="text-xs text-blue-300 font-medium leading-snug">
+              当前为浏览器模式。添加到主屏幕可获得推送通知和全屏体验。
+            </span>
+          </div>
+          <button
+            onClick={() => setShowPwaBanner(false)}
+            className="p-1 text-zinc-500 hover:text-white shrink-0 rounded-md hover:bg-zinc-800 transition-colors"
+          >
+            <X className="w-3.5 h-3.5 pointer-events-none" />
+          </button>
+        </div>
+      )}
+      
       {sessions.length === 0 ? (
         <div className="flex flex-col items-center justify-center p-12 text-zinc-500 text-sm">
           暂无聊天记录，去通讯录加个好友吧

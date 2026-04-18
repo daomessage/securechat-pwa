@@ -53,7 +53,7 @@ export function ChatWindow() {
       }
     });
 
-    client.getHistory(activeChatId, { limit: PAGE_SIZE }).then(stored => {
+    client.messages.getHistory(activeChatId, { limit: PAGE_SIZE }).then(stored => {
       if (!active) return;
       setMessages(stored.map(m => ({ ...m })));
       setHasMore(stored.length >= PAGE_SIZE);
@@ -74,7 +74,7 @@ export function ChatWindow() {
         return [...prev, chatMsg];
       });
       if (!msg.isMe && msg.seq && sessionInfo?.theirAliasId) {
-        client.markAsRead(activeChatId, msg.seq, sessionInfo.theirAliasId);
+        client.messages.markAsRead(activeChatId, msg.seq, sessionInfo.theirAliasId);
       }
     };
 
@@ -109,7 +109,7 @@ export function ChatWindow() {
 
     setLoadingMore(true);
     try {
-      const older = await client.getHistory(activeChatId, {
+      const older = await client.messages.getHistory(activeChatId, {
         limit: PAGE_SIZE,
         before: oldest.time,
       });
@@ -179,9 +179,9 @@ export function ChatWindow() {
   };
 
   return (
-    <div className="flex flex-col vv-height bg-zinc-950 text-white pb-safe relative">
-      {/* 顶部 Header - 支持 notch/safe area */}
-      <div className="flex items-center border-b border-zinc-900 bg-zinc-950/80 backdrop-blur-md z-10 sticky top-0 shrink-0" style={{ padding: 'calc(0.75rem + env(safe-area-inset-top)) 0.75rem 0.75rem' }}>
+    <div className="flex flex-col h-screen bg-zinc-950 text-white pb-safe relative">
+      {/* 顶部 Header */}
+      <div className="flex items-center p-3 border-b border-zinc-900 bg-zinc-950/80 backdrop-blur-md z-10 sticky top-0 shrink-0">
         <button onClick={() => setActiveChatId(null)} className="p-2 -ml-2 text-zinc-400 hover:text-white transition-colors flex items-center">
           <ChevronLeft className="w-6 h-6 pointer-events-none" />
         </button>
@@ -378,7 +378,7 @@ export function ChatWindow() {
                 className="w-full text-left px-4 py-2.5 text-sm text-red-400 hover:bg-zinc-700 transition-colors rounded-t-xl"
                 onClick={async () => {
                   if (sessionInfo?.theirAliasId && activeChatId) {
-                    await client.retractMessage(contextMenu.msgId, sessionInfo.theirAliasId, activeChatId);
+                    await client.messages.retract(contextMenu.msgId, sessionInfo.theirAliasId, activeChatId);
                   }
                   setContextMenu(null);
                 }}

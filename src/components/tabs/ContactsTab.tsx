@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { client } from '../../lib/imClient';
 import { useAppStore } from '../../store/appStore';
-import type { ContactProfile } from '@daomessage_sdk/sdk';
+import type { FriendProfile as ContactProfile } from '@daomessage_sdk/sdk';
 import { UserPlus, Search, Loader2, Clock, QrCode, ScanLine } from 'lucide-react';
 import { useSdkAction } from '../../hooks/useSdkAction';
 import { QRCodeSVG } from 'qrcode.react';

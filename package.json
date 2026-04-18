@@ -1,0 +1,52 @@
+{
+  "name": "dao-message-pwa",
+  "private": true,
+  "version": "1.0.0",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "tsc -b && vite build",
+    "lint": "eslint .",
+    "preview": "vite preview",
+    "gen:splash": "npx pwa-asset-generator ./public/favicon.svg ./public/splash --background \"#09090b\" --splash-only --path-override /splash --manifest ./public/manifest.webmanifest --index ./index.html --log=false",
+    "deploy:cf": "npm run build && npx wrangler pages deploy dist --project-name daomessage-pwa",
+    "deploy:cf:preview": "npm run build && npx wrangler pages deploy dist --project-name daomessage-pwa --branch preview"
+  },
+  "dependencies": {
+    "@daomessage_sdk/sdk": "^1.0.0",
+    "@yudiel/react-qr-scanner": "^2.5.1",
+    "clsx": "^2.1.1",
+    "framer-motion": "^12.38.0",
+    "lucide-react": "^1.7.0",
+    "qrcode.react": "^4.2.0",
+    "react": "^19.2.4",
+    "react-dom": "^19.2.4",
+    "react-markdown": "^10.1.0",
+    "react-virtuoso": "^4.18.4",
+    "remark-gfm": "^4.0.1",
+    "tailwind-merge": "^3.5.0",
+    "zustand": "^5.0.12"
+  },
+  "devDependencies": {
+    "@eslint/js": "^9.39.4",
+    "@tailwindcss/vite": "^4.2.2",
+    "@types/node": "^24.12.0",
+    "@types/react": "^19.2.14",
+    "@types/react-dom": "^19.2.3",
+    "@vitejs/plugin-react": "^6.0.1",
+    "eslint": "^9.39.4",
+    "eslint-plugin-react-hooks": "^7.0.1",
+    "eslint-plugin-react-refresh": "^0.5.2",
+    "globals": "^17.4.0",
+    "tailwindcss": "^4.2.2",
+    "typescript": "~5.9.3",
+    "typescript-eslint": "^8.57.0",
+    "vite": "^8.0.1",
+    "vite-plugin-pwa": "^1.2.0",
+    "workbox-core": "^7.4.0",
+    "workbox-precaching": "^7.4.0",
+    "workbox-routing": "^7.4.0",
+    "workbox-strategies": "^7.4.0",
+    "workbox-window": "^7.4.0"
+  }
+}

@@ -13,7 +13,7 @@
     "deploy:cf:preview": "npm run build && npx wrangler pages deploy dist --project-name daomessage-pwa --branch preview"
   },
   "dependencies": {
-    "@daomessage_sdk/sdk": "^1.0.0",
+    "@daomessage_sdk/sdk": "^1.0.1",
     "@yudiel/react-qr-scanner": "^2.5.1",
     "clsx": "^2.1.1",
     "framer-motion": "^12.38.0",

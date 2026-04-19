@@ -179,7 +179,10 @@ export function ChatWindow() {
   };
 
   return (
-    <div className="flex flex-col h-screen bg-zinc-950 text-white pb-safe relative">
+    <div className="flex flex-col h-[100dvh] bg-zinc-950 text-white relative">
+      {/* h-[100dvh] = dynamic viewport height, 手机浏览器地址栏收缩/键盘弹出时自动调整,避免输入框被推出屏幕外
+          原来用 h-screen (100vh) 在 iOS Safari / Android Chrome 上会包含地址栏占用的高度,导致底部输入栏看不见。
+          pb-safe 由子组件 ChatInputBar 自己负责 safe-area 填充 */}
       {/* 顶部 Header */}
       <div className="flex items-center p-3 border-b border-zinc-900 bg-zinc-950/80 backdrop-blur-md z-10 sticky top-0 shrink-0">
         <button onClick={() => setActiveChatId(null)} className="p-2 -ml-2 text-zinc-400 hover:text-white transition-colors flex items-center">

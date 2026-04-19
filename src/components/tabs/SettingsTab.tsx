@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { client } from '../../lib/imClient';
 import { useAppStore } from '../../store/appStore';
 import { loadIdentity, clearIdentity } from '@daomessage_sdk/sdk';
-import { LogOut, Copy, Fingerprint, Activity, Download, Bell, Store, Loader2 } from 'lucide-react';
+import { LogOut, Copy, Fingerprint, Activity, Download, Bell, Store, Loader2, Info, GitBranch } from 'lucide-react';
 import { useSdkAction } from '../../hooks/useSdkAction';
 
 export function SettingsTab() {
@@ -135,6 +135,49 @@ export function SettingsTab() {
           </div>
           <div className="flex items-center justify-between p-4 cursor-pointer hover:bg-zinc-800/50" onClick={handleExport}>
             <div className="flex items-center gap-3"><Download className="w-5 h-5 text-cyan-400 pointer-events-none" /> <span className="text-sm">导出聊天数据 (NDJSON)</span></div>
+          </div>
+        </div>
+      </div>
+
+      {/* 版本信息 */}
+      <div className="space-y-3">
+        <h3 className="text-sm font-semibold text-zinc-500 pl-1">版本信息</h3>
+        <div className="bg-zinc-900 border border-zinc-800 rounded-2xl overflow-hidden divide-y divide-zinc-800">
+          <div className="flex items-center justify-between p-4">
+            <div className="flex items-center gap-3">
+              <Info className="w-5 h-5 text-blue-400 pointer-events-none" />
+              <span className="text-sm">PWA 版本</span>
+            </div>
+            <span className="text-xs text-zinc-400 font-mono">{__PWA_VERSION__}</span>
+          </div>
+          <div className="flex items-center justify-between p-4">
+            <div className="flex items-center gap-3">
+              <Fingerprint className="w-5 h-5 text-blue-400 pointer-events-none" />
+              <span className="text-sm">SDK 版本</span>
+            </div>
+            <span className="text-xs text-zinc-400 font-mono">@daomessage_sdk/sdk @ {__SDK_VERSION__}</span>
+          </div>
+          <div className="flex items-center justify-between p-4">
+            <div className="flex items-center gap-3">
+              <GitBranch className="w-5 h-5 text-blue-400 pointer-events-none" />
+              <span className="text-sm">Git Commit</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <span className="text-xs text-zinc-400 font-mono">{__GIT_BRANCH__}@{__GIT_COMMIT__}</span>
+              <button
+                className="text-zinc-500 hover:text-white transition-colors"
+                onClick={() => { navigator.clipboard.writeText(`${__GIT_BRANCH__}@${__GIT_COMMIT__}`); alert('已复制'); }}
+              >
+                <Copy className="w-3 h-3 pointer-events-none" />
+              </button>
+            </div>
+          </div>
+          <div className="flex items-center justify-between p-4">
+            <div className="flex items-center gap-3">
+              <Activity className="w-5 h-5 text-blue-400 pointer-events-none" />
+              <span className="text-sm">构建时间</span>
+            </div>
+            <span className="text-xs text-zinc-400 font-mono">{__BUILD_TIME__.slice(0, 19).replace('T', ' ')}</span>
           </div>
         </div>
       </div>

@@ -83,8 +83,9 @@ function App() {
                     setTimeout(() => useAppStore.getState().setCallState(null), 1500);
                   }
                 };
-                mod.onIncomingCall = (fromAlias: string) => {
-                  useAppStore.getState().beginCall(fromAlias, 'video');
+                mod.onIncomingCall = (fromAlias: string, isVideo: boolean) => {
+                  // 根据对端 SDP m=video 判断是音频还是视频来电, UI 响铃界面据此渲染
+                  useAppStore.getState().beginCall(fromAlias, isVideo ? 'video' : 'audio');
                 };
                 mod.onError = (err: Error) => {
                   console.error('[CallModule] error:', err);

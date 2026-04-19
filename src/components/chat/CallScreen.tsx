@@ -47,41 +47,49 @@ export function CallScreen() {
     return `${m}:${s}`;
   };
 
-  // ── 挂载 CallModule 回调 ──────────────────────────────────────
+  // ── 订阅 local / remote stream ──────────────────────────────
+  // 之前用 mod.onLocalStream = (s) => localVideoRef.current.srcObject = s 有竞态:
+  // answer() 里 getUserMedia 很快 resolve,触发 onLocalStream 时 CallScreen 可能还在 mount
+  // 或者 localVideo 元素 (isVideo=true 但 render 未完成) 的 ref 还是 null, 导致流不挂上,
+  // 手机端看到对方视频但自己小窗空。
+  // 改用 React 状态 + observable 订阅, 用 [stream, ref] 双依赖的 useEffect 保证任何时候
+  // 两端都变化都会 re-attach.
+  const [localStream,  setLocalStream]  = useState<MediaStream | null>(null);
+  const [remoteStream, setRemoteStream] = useState<MediaStream | null>(null);
+
   useEffect(() => {
     const mod = getCallModule();
     if (!mod) return;
-
-    // 如果挂载时已经有流了，直接赋值
-    if (mod.getLocalStream() && localVideoRef.current) {
-      localVideoRef.current.srcObject = mod.getLocalStream();
-    }
-    if (mod.getRemoteStream() && remoteVideoRef.current) {
-      remoteVideoRef.current.srcObject = mod.getRemoteStream();
-      remoteVideoRef.current.play().catch(e => console.error('🔥 [CallScreen] autoplay 被拦截:', e));
-    }
-    if (mod.getRemoteStream() && remoteAudioRef.current) {
-      remoteAudioRef.current.srcObject = mod.getRemoteStream();
-      remoteAudioRef.current.play().catch(e => console.error('🔥 [CallScreen] audio autoplay 被拦截:', e));
-    }
-
-    mod.onLocalStream = (stream: MediaStream) => {
-      if (localVideoRef.current) localVideoRef.current.srcObject = stream;
-    };
-
-    mod.onRemoteStream = (stream: MediaStream) => {
-      console.warn(`🔥 [CallScreen] 收到远程媒体流! Audio tracks: ${stream.getAudioTracks().length}, Video tracks: ${stream.getVideoTracks().length}`);
-      if (remoteVideoRef.current) {
-        remoteVideoRef.current.srcObject = stream;
-        remoteVideoRef.current.play().catch(e => console.error('🔥 [CallScreen] video autoplay 被拦截:', e));
-      }
-      if (remoteAudioRef.current) {
-        remoteAudioRef.current.srcObject = stream;
-        remoteAudioRef.current.play().catch(e => console.error('🔥 [CallScreen] audio autoplay 被拦截:', e));
-      }
-    };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+    // 初始值(订阅立刻拿到 current value)
+    setLocalStream(mod.getLocalStream());
+    setRemoteStream(mod.getRemoteStream());
+    // observable 订阅,任何时候 stream 变都 sync
+    const loSub = mod.observeLocalStream().subscribe(setLocalStream);
+    const reSub = mod.observeRemoteStream().subscribe(setRemoteStream);
+    return () => { loSub.unsubscribe(); reSub.unsubscribe(); };
   }, []);
+
+  // 把 localStream 挂到 <video>,任何一边变化都重 attach
+  useEffect(() => {
+    if (localVideoRef.current && localStream && localVideoRef.current.srcObject !== localStream) {
+      localVideoRef.current.srcObject = localStream;
+    }
+  }, [localStream, callState]);
+
+  // remote 同理,attach 到大窗 video + 独立 audio 元素(autoplay 被拦时兜底)
+  useEffect(() => {
+    if (remoteStream) {
+      console.warn(`🔥 [CallScreen] remoteStream: audio=${remoteStream.getAudioTracks().length} video=${remoteStream.getVideoTracks().length}`);
+    }
+    if (remoteVideoRef.current && remoteStream && remoteVideoRef.current.srcObject !== remoteStream) {
+      remoteVideoRef.current.srcObject = remoteStream;
+      remoteVideoRef.current.play().catch(e => console.warn('[CallScreen] remote video autoplay blocked:', e));
+    }
+    if (remoteAudioRef.current && remoteStream && remoteAudioRef.current.srcObject !== remoteStream) {
+      remoteAudioRef.current.srcObject = remoteStream;
+      remoteAudioRef.current.play().catch(e => console.warn('[CallScreen] remote audio autoplay blocked:', e));
+    }
+  }, [remoteStream, callState]);
 
   // 始终尝试唤醒
   useEffect(() => {

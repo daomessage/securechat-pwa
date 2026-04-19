@@ -70,6 +70,12 @@ export function onNetworkStateChange(fn: (state: NetworkState) => void) {
 /**
  * 类型安全的通话模块访问器
  */
+type Subscription = { unsubscribe(): void };
+type ObservableLike<T> = {
+  subscribe(cb: (v: T) => void): Subscription;
+  readonly value: T;
+};
+
 export type CallModuleAny = {
   call(toAliasId: string, opts?: { audio?: boolean; video?: boolean }): Promise<void>;
   answer(): Promise<void>;
@@ -77,6 +83,9 @@ export type CallModuleAny = {
   hangup(): void;
   getLocalStream(): MediaStream | null;
   getRemoteStream(): MediaStream | null;
+  // 响应式订阅(首选) — CallScreen 用这两个避免 onLocalStream 赋值的 React ref 竞态
+  observeLocalStream(): ObservableLike<MediaStream | null>;
+  observeRemoteStream(): ObservableLike<MediaStream | null>;
   onStateChange?: ((state: string) => void) | undefined;
   onRemoteStream?: ((stream: MediaStream) => void) | undefined;
   onLocalStream?: ((stream: MediaStream) => void) | undefined;

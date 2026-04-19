@@ -1,14 +1,18 @@
 # Cloudflare Pages project configuration
 # 用于 `wrangler pages deploy dist/` 命令行部署(可选,CF 后台 Git 集成后这个文件不是必需)
+#
+# 生产域名 chat.daomessage.com 绑定在 CF Pages 项目 "securechat-pwa"
+# (domains=['securechat-pwa.pages.dev', 'chat.daomessage.com'])
+# 旧项目 "daomessage-pwa" 是历史遗留,没绑生产域名,不要再 deploy 过去。
 
-name = "daomessage-pwa"
+name = "securechat-pwa"
 compatibility_date = "2026-04-17"
 pages_build_output_dir = "dist"
 
 # 生产环境显式声明(CF Dashboard 可覆盖)
 [env.production]
-name = "daomessage-pwa"
+name = "securechat-pwa"
 
 # 预览环境
 [env.preview]
-name = "daomessage-pwa-preview"
+name = "securechat-pwa-preview"

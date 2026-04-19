@@ -106,7 +106,20 @@ export function CallScreen() {
 
   // ── 操作处理 ──────────────────────────────────────────────────
   const handleHangup  = useCallback(() => { getCallModule()?.hangup(); }, []);
-  const handleAnswer  = useCallback(async () => { try { await getCallModule()?.answer(); } catch (e) { console.error('[Call] 接听失败', e); } }, []);
+  // answering 锁防连点:接听是异步的(getUserMedia 可能 6 秒),在 Promise resolve 前
+  // 重复点击会重入 answer() 并发多次调 gUM,多个并发 gUM 互相阻塞导致全部 timeout。
+  const [answering, setAnswering] = useState(false);
+  const handleAnswer = useCallback(async () => {
+    if (answering) return;
+    setAnswering(true);
+    try {
+      await getCallModule()?.answer();
+    } catch (e) {
+      console.error('[Call] 接听失败', e);
+    } finally {
+      setAnswering(false);
+    }
+  }, [answering]);
   const handleReject  = useCallback(() => { getCallModule()?.reject(); }, []);
 
   const toggleMute = useCallback(() => {

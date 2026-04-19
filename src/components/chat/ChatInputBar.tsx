@@ -65,19 +65,19 @@ export function ChatInputBar({
   const { execute: sendImage, isProcessing: isSendingImage } = useSdkAction(async (file: File) => {
     if (!activeChatId || !sessionInfo?.theirAliasId) return;
     const thumbnail = await generateBlurryThumbnail(file);
-    await client.media.sendImage(activeChatId, file, { thumbnail } as any);
+    await client.media.sendImage(activeChatId, sessionInfo.theirAliasId, file, { thumbnail });
     onMessageSent();
   });
 
   const { execute: sendFile, isProcessing: isSendingFile } = useSdkAction(async (file: File) => {
     if (!activeChatId || !sessionInfo?.theirAliasId) return;
-    await client.media.sendFile(activeChatId, file);
+    await client.media.sendFile(activeChatId, sessionInfo.theirAliasId, file);
     onMessageSent();
   });
 
   const { execute: sendVoice, isProcessing: isSendingVoice } = useSdkAction(async (args: { blob: Blob; durationMs: number }) => {
     if (!activeChatId || !sessionInfo?.theirAliasId) return;
-    await client.media.sendVoice(activeChatId, args.blob, args.durationMs);
+    await client.media.sendVoice(activeChatId, sessionInfo.theirAliasId, args.blob, args.durationMs);
     onMessageSent();
   });
 

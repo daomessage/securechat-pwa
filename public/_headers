@@ -38,4 +38,5 @@
   Permissions-Policy: camera=(self), microphone=(self), geolocation=(), payment=(), usb=(), magnetometer=()
   Strict-Transport-Security: max-age=31536000; includeSubDomains; preload
   # CSP: 允许连接到 relay.daomessage.com(API + WS) 和 TURN STUN 服务器
-  Content-Security-Policy: default-src 'self'; script-src 'self' 'wasm-unsafe-eval'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; font-src 'self' data:; connect-src 'self' https://relay.daomessage.com wss://relay.daomessage.com https://*.relay.daomessage.com; media-src 'self' blob:; worker-src 'self' blob:; frame-ancestors 'none'; base-uri 'self'; form-action 'self'; manifest-src 'self'
+  # media-src 允许 data: 是因为 @yudiel/react-qr-scanner 的成功提示音是 base64 data URI
+  Content-Security-Policy: default-src 'self'; script-src 'self' 'wasm-unsafe-eval'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; font-src 'self' data:; connect-src 'self' https://relay.daomessage.com wss://relay.daomessage.com https://*.relay.daomessage.com; media-src 'self' blob: data:; worker-src 'self' blob:; frame-ancestors 'none'; base-uri 'self'; form-action 'self'; manifest-src 'self'

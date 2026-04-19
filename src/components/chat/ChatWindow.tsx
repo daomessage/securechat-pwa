@@ -207,11 +207,11 @@ export function ChatWindow() {
             id="btn-voice-call"
             title="语音通话"
             onClick={async () => {
-              console.warn('🔥 [App] 语音通话按钮点击! theirAliasId:', sessionInfo?.theirAliasId);
+              console.error('🔥 [App] 语音通话按钮点击! theirAliasId:', sessionInfo?.theirAliasId);
               const mod = getCallModule();
-              console.warn('🔥 [App] CallModule 实例:', mod ? '已初始化' : 'NULL');
+              console.error('🔥 [App] CallModule 实例:', mod ? '已初始化' : 'NULL');
               if (!sessionInfo?.theirAliasId) {
-                console.warn('🔥 [App] theirAliasId 为空，终止');
+                console.error('🔥 [App] theirAliasId 为空，终止');
                 return;
               }
               if (!mod) {
@@ -222,10 +222,10 @@ export function ChatWindow() {
               const store = useAppStore.getState();
               store.beginCall(sessionInfo.theirAliasId, 'audio');
               store.setCallState('calling');
-              console.warn('🔥 [App] 开始调用 mod.call()，目标:', sessionInfo.theirAliasId);
+              console.error('🔥 [App] 开始调用 mod.call()，目标:', sessionInfo.theirAliasId);
               try {
                 await (mod as any).call(sessionInfo.theirAliasId, { audio: true, video: false });
-                console.warn('🔥 [App] mod.call() 已完成（无异常）');
+                console.error('🔥 [App] mod.call() 已完成（无异常）');
               } catch (e: any) {
                 console.error('🔥 [App] 语音呼叫失败', e);
                 store.setCallState(null);
@@ -240,22 +240,29 @@ export function ChatWindow() {
             id="btn-video-call"
             title="视频通话"
             onClick={async () => {
+              console.error('🟠 [App] 视频通话按钮点击! theirAliasId:', sessionInfo?.theirAliasId);
               const mod = getCallModule();
-              if (!sessionInfo?.theirAliasId) return;
+              console.error('🟠 [App] CallModule 实例:', mod ? '已初始化' : 'NULL');
+              if (!sessionInfo?.theirAliasId) {
+                console.error('🟠 [App] theirAliasId 为空,终止');
+                return;
+              }
               if (!mod) {
-                console.warn('[Call] CallModule 未初始化，请重新进入页面');
-                alert('通话模块正在初始化，请稍候再试');
+                console.error('🟠 [App] CallModule 未初始化');
+                alert('通话模块正在初始化,请稍候再试');
                 return;
               }
               const store = useAppStore.getState();
               store.beginCall(sessionInfo.theirAliasId, 'video');
               store.setCallState('calling');
+              console.error('🟠 [App] 开始调用 mod.call() video,目标:', sessionInfo.theirAliasId);
               try {
                 await (mod as any).call(sessionInfo.theirAliasId, { audio: true, video: true });
+                console.error('🟠 [App] mod.call() 已完成(无异常返回)');
               } catch (e: any) {
-                console.error('[Call] 视频呼叫失败', e);
+                console.error('🟠 [App] 视频呼叫失败 捕获异常:', e);
                 store.setCallState(null); // 重置 CallScreen
-                alert(`呼叫失败: ${e?.message || '未知错误（可能是摄像头/麦克风权限被拒）'}`);
+                alert(`呼叫失败: ${e?.message || '未知错误(可能是摄像头/麦克风权限被拒)'}`);
               }
             }}
             className="p-2 text-zinc-400 hover:text-white active:scale-90 transition-all rounded-lg hover:bg-zinc-800"

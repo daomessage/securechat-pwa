@@ -281,19 +281,35 @@ export function ContactsTab() {
           </h3>
           <div className="w-full max-w-sm overflow-hidden rounded-2xl border border-zinc-800 bg-black relative">
             <Scanner
-              onScan={(results) => {
-                if (results.length > 0) {
-                  const txt = results[0].rawValue;
-                  // 解析 securechat://add?aliasId=xxx 或纯别名
-                  const match = txt.match(/aliasId=([^&]+)/) || txt.match(/^([a-zA-Z0-9_-]+)$/) || [null, txt];
-                  const code = match[1] || txt;
-                  if (code) {
-                    setShowScanModal(false);
-                    handleSearch(code); // 直接发起搜索
-                  }
+              onScan={(results: any) => {
+                console.error('🟣 [Scanner] onScan 触发', {
+                  type: typeof results,
+                  isArray: Array.isArray(results),
+                  length: results?.length,
+                  raw: results,
+                });
+                // 兼容不同库版本的回调形态:
+                // - 老版本: results 是 string (直接 QR 内容)
+                // - 新版本: results 是 [{ rawValue: '...', ... }]
+                let txt: string | undefined;
+                if (typeof results === 'string') {
+                  txt = results;
+                } else if (Array.isArray(results) && results.length > 0) {
+                  txt = results[0]?.rawValue ?? results[0]?.text;
+                } else if (results && typeof results === 'object' && 'rawValue' in results) {
+                  txt = results.rawValue;
+                }
+                console.error('🟣 [Scanner] 解出 rawValue:', txt);
+                if (!txt) return;
+                const match = txt.match(/aliasId=([^&]+)/) || txt.match(/^([a-zA-Z0-9_-]+)$/) || [null, txt];
+                const code = match[1] || txt;
+                console.error('🟣 [Scanner] 解析出 alias code:', code);
+                if (code) {
+                  setShowScanModal(false);
+                  handleSearch(code);
                 }
               }}
-              onError={(e) => console.log('Scan err:', e)}
+              onError={(e) => console.error('🟣 [Scanner] err:', e)}
             />
           </div>
           <p className="mt-6 text-zinc-500 text-sm text-center">将二维码放入框内，即可自动扫描</p>

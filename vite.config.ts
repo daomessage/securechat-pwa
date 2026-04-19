@@ -65,24 +65,23 @@ export default defineConfig(({ mode }): UserConfig => ({
       }
     })
   ],
-  // Vite 8+ 默认用 rolldown 打包,minify 用 oxc 引擎。
-  // 剥离 console/debugger 通过 `build.minifyOptions.compress.drop{Console,Debugger}` 配置。
-  // 旧 Vite(esbuild) 分支保留兼容。
+  // 生产构建:只 drop debugger,保留 console.*
+  // 之前全 drop console 导致 1.0.3/1.0.7 线上排障时 console.error 全部消失,
+  // 用户报 "没反应" 时没办法看 SDK 执行到哪一步。
+  // console.log 量不大,留着;console.error/warn 是排障生命线,必须保留。
   esbuild: mode === 'production'
-    ? ({ drop: ['console', 'debugger'] } as unknown as UserConfig['esbuild'])
+    ? ({ drop: ['debugger'] } as unknown as UserConfig['esbuild'])
     : undefined,
   build: {
     // 生产环境禁用 sourcemap,避免源码外泄
     sourcemap: false,
-    // Vite 8 默认 minify=oxc(rolldown 内置);这里保持默认
     minify: mode === 'production' ? true : false,
-    // 通过 rolldown 的 output.minify 传入完整 MinifyOptions,剥离 console/debugger
     rolldownOptions: mode === 'production'
       ? {
           output: {
             minify: {
               compress: {
-                dropConsole: true,
+                dropConsole: false,
                 dropDebugger: true,
               },
             },

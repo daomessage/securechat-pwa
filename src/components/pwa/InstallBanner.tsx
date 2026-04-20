@@ -18,6 +18,7 @@ import { useAppStore } from '../../store/appStore';
 
 const DISMISS_KEY = 'pwa_install_dismissed_at';
 const DISMISS_MS = 7 * 24 * 3600 * 1000; // 7 天
+const SHOW_DELAY_MS = 3000; // 首访 3 秒后才显示,避免刚打开就被打扰
 
 function isStandalone(): boolean {
   // iOS Safari 用 navigator.standalone,Android 和其他都用 matchMedia
@@ -39,6 +40,13 @@ function debugForce(): 'ios' | 'android' | null {
 function isIOS(): boolean {
   if (debugForce() === 'ios') return true;
   return /iPad|iPhone|iPod/.test(navigator.userAgent) && !('MSStream' in window);
+}
+
+function isIPad(): boolean {
+  if (debugForce() === 'ios') return /iPad/.test(navigator.userAgent);
+  // iPadOS 13+ 伪装成 Mac, 用 maxTouchPoints 判断
+  const ua = navigator.userAgent;
+  return /iPad/.test(ua) || (/Macintosh/.test(ua) && navigator.maxTouchPoints > 1);
 }
 
 function isIOSSafari(): boolean {
@@ -76,7 +84,9 @@ export function InstallBanner() {
     // iOS Safari:直接显示引导
     // iOS 非 Safari(Chrome iOS 等):不支持,不显示
     if (isIOSSafari() || deferredPrompt) {
-      setVisible(true);
+      // 首访 3 秒延迟,避免刚进页面就弹横幅打扰
+      const timer = setTimeout(() => setVisible(true), SHOW_DELAY_MS);
+      return () => clearTimeout(timer);
     }
   }, [deferredPrompt]);
 
@@ -121,7 +131,7 @@ export function InstallBanner() {
             <li className="flex items-start gap-3">
               <span className="flex-none w-6 h-6 rounded-full bg-blue-600 text-white text-xs font-bold flex items-center justify-center">1</span>
               <span>
-                点击底部的 <strong>分享按钮</strong>
+                点击 {isIPad() ? <>Safari <strong>右上角</strong></> : <><strong>底部</strong></>} 的 <strong>分享按钮</strong>
                 <span className="inline-block align-middle mx-1 text-blue-400" aria-hidden>
                   <svg width="18" height="22" viewBox="0 0 18 22" fill="currentColor" xmlns="http://www.w3.org/2000/svg"><path d="M9 1L5 5h3v9h2V5h3L9 1zM3 8v11h12V8h-3v2h1v7H5v-7h1V8H3z"/></svg>
                 </span>
@@ -136,6 +146,9 @@ export function InstallBanner() {
               <span>点右上角 <strong>「添加」</strong> 完成</span>
             </li>
           </ol>
+          <p className="mt-4 text-xs text-zinc-500">
+            装到主屏后打开,首次启动会请求通知权限。允许后才能收到离线消息。
+          </p>
           <button
             onClick={handleDismiss}
             className="w-full mt-5 py-3 rounded-xl bg-zinc-800 hover:bg-zinc-700 text-zinc-200 text-sm font-medium transition-colors"

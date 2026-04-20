@@ -1,3 +1,7 @@
 # Cloudflare Pages - SPA fallback
-# 所有未匹配静态文件的请求返回 index.html,让 React Router 接管
+# CF Pages 默认启用 "auto-trailing-slash" + "strip .html ext" —
+# 所以 /install.html 和 /install 都会自动 serve install.html 文件
+# 不需要写额外 rewrite 规则 (写了反而导致循环重定向)
+
+# 所有未匹配静态文件的请求返回 index.html, 让 React SPA 接管
 /*    /index.html   200

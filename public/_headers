@@ -30,6 +30,12 @@
 /
   Cache-Control: no-cache, no-store, must-revalidate
 
+# /install.html 独立决策页 (纯静态, inline script 用于 iOS 检测 + webclip 跳转)
+# 需要比 SPA 更宽松的 CSP 允许 inline <script> 和 <style>
+/install.html
+  Cache-Control: no-cache, no-store, must-revalidate
+  Content-Security-Policy: default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https:; font-src 'self' data:; connect-src 'self' https://relay.daomessage.com; frame-ancestors 'none'; base-uri 'self'; form-action 'self'
+
 # ── 安全头(对齐 docs/SECURITY_HARDENING.md P3 加固)──
 /*
   X-Frame-Options: DENY

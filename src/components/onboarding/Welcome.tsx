@@ -28,6 +28,12 @@ export function Welcome() {
           恢复已有账户
         </button>
       </div>
+      {/* 底部入口: 装到手机 / 部署自己的, 不打断核心 onboarding 流程 */}
+      <div className="pt-6 text-center text-sm text-zinc-500">
+        <a href="/install" className="hover:text-zinc-300 underline-offset-4 hover:underline transition-colors">
+          安装到手机 · 部署你自己的 →
+        </a>
+      </div>
     </div>
   );
 }

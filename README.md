@@ -13,14 +13,16 @@ No command line required. Pick a platform:
 
 Vercel / Netlify 会自动帮你 fork 到你的 GitHub,然后部署。2 分钟拿到 `<x>.vercel.app` / `<x>.netlify.app`。
 
-### Cloudflare — 需要先 fork(2 步)
+### Cloudflare Pages — 3 步手动(官方 Deploy Button 踩坑)
 
-Cloudflare 要求你先 fork 到自己 GitHub,它才能读到仓库内容:
+> ⚠️ **不要**用 `deploy.workers.cloudflare.com` 那种"Deploy Button"—— 它会把我们当成 Worker,
+> 误预填 `npx wrangler deploy`,导致构建失败。手动 3 步最稳。
 
-1. 点 **[Fork this repository](https://github.com/daomessage/securechat-pwa/fork)** 到你的 GitHub
-2. 点 [![Deploy to Cloudflare](https://deploy.workers.cloudflare.com/button)](https://deploy.workers.cloudflare.com/?url=https://github.com/daomessage/securechat-pwa) — 在 URL 输入框里把 `daomessage` 改成你的 GitHub 用户名
+1. **Fork 模板** → [点这里 fork](https://github.com/daomessage/securechat-pwa/fork) 到你的 GitHub
+2. **打开 CF Pages 新建页** → [dash.cloudflare.com Pages](https://dash.cloudflare.com/?to=/:account/workers-and-pages/create/pages)
+3. **Connect to Git** → 选你刚 fork 的 `securechat-pwa` → 保持默认(`npm run build` / `dist`)→ 点 Deploy
 
-部署完拿到 `<x>.pages.dev`,中国用户访问最快。
+2-3 分钟拿到 `<你的项目名>.pages.dev`,中国访问最快。完整截图教程见 **[DEPLOY.md](./DEPLOY.md)**。
 
 ---
 

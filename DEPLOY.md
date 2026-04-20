@@ -20,50 +20,43 @@ All three give you HTTPS, PWA support, and a free subdomain. Pick whichever you 
 
 ## 🚀 Cloudflare Pages (Recommended)
 
-> ⚠️ **Prerequisite**: Before clicking the Deploy Button, you need to install the
-> **Cloudflare Pages GitHub App** on your GitHub account **once**. Cloudflare can't
-> read any repo (even public ones) without this. See **Step 0 below**.
+> ⚠️ **重要**: 不要用 `deploy.workers.cloudflare.com/?url=...` 那种 "Deploy Button"。
+> CF 的 Deploy Button 实际走的是 **Worker** 创建流程,会误把我们的 PWA 当成 Worker,
+> 预填 `npx wrangler deploy`(错的!应该是 pages deploy)→ 构建失败。
+>
+> **正确做法: 3 步手动**(总耗时 ~3 分钟)。
 
-### Step 0 · First-time only: Authorize GitHub ↔ Cloudflare
+### Step 1 · Fork 模板到你的 GitHub
 
-Skip this if you've deployed a CF Pages project before.
+1. 打开 <https://github.com/daomessage/securechat-pwa>
+2. 右上角点 **Fork**
+3. Fork 到 `github.com/<你的用户名>/securechat-pwa`
 
-1. Open <https://dash.cloudflare.com/> — create/login to your Cloudflare account
-2. Left sidebar → **Workers & Pages**
-3. Click **Create application** → **Pages** tab → **Connect to Git**
-4. Click **Connect GitHub**
-5. In GitHub popup: choose **"All repositories"** (easiest) or **"Only select repositories"** (pick `securechat-pwa` after you fork it in Step 1 below)
-6. Install the `Cloudflare Workers and Pages` app
+### Step 2 · 首次:授权 GitHub ↔ Cloudflare Pages
 
-Done. You only need to do this once per GitHub account.
+(做过一次就跳到 Step 3)
 
-### Step 1 · Fork our template
+1. 打开 <https://dash.cloudflare.com/> 注册/登录 Cloudflare 免费账号
+2. 左侧 **Workers & Pages**
+3. 点 **Create** → 选 **Pages** tab(**不是** Workers tab!)
+4. 点 **Connect to Git**
+5. **Connect GitHub** → 弹窗授权
+6. 选 **Only select repositories** → 勾选你刚 fork 的 `securechat-pwa`
+7. **Install & Authorize**
 
-Because the Deploy Button can't clone someone else's repo directly (see troubleshooting), fork first:
+### Step 3 · 创建项目 + 部署
 
-1. Go to <https://github.com/daomessage/securechat-pwa>
-2. Click **Fork** (top-right)
-3. Fork lands at `github.com/<your-github-username>/securechat-pwa`
+1. Connect to Git 页面选你 fork 的 `securechat-pwa`(Git 帐户下拉里)
+2. Begin setup
+3. **项目名**: 默认 `securechat-pwa` 或改成你想要的 `<name>`(这会是 `<name>.pages.dev`)
+4. **Framework preset**: 选 **Vite** (或保持 None,我们 `wrangler.toml` 会自动识别)
+5. **Build command**: `npm run build`
+6. **Build output directory**: `dist`
+7. **环境变量**(可选): 留空就好,默认连官方 relay.daomessage.com
+8. 点 **Save and Deploy**
+9. 等 ~90 秒
 
-### Step 2 · Deploy
-
-1. **Click the "Deploy to Cloudflare" button** in the main README,
-   **or** directly visit:
-   ```
-   https://deploy.workers.cloudflare.com/?url=https://github.com/<your-github-username>/securechat-pwa
-   ```
-   (replace `<your-github-username>` with yours)
-2. **"克隆存储库" 页面会拿到 repo 内容** (because it's now in your own GitHub account)
-3. Click **Continue**
-4. **Choose a project name** — default is fine, becomes `<name>.pages.dev`
-5. Build settings are auto-detected from our `wrangler.toml` + `package.json`:
-   - Build command: `npm run build`
-   - Output directory: `dist`
-   - Node version: 22 (from `.node-version`)
-6. Click **Create and deploy**
-7. Wait ~90 seconds for build
-
-**Done.** Open `<name>.pages.dev`, register, chat.
+**完成**。打开 `<name>.pages.dev`,注册账号,开始聊天。
 
 ### Optional: Custom Domain
 

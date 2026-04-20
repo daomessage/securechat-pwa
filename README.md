@@ -4,15 +4,27 @@ This is the official Web/PWA boilerplate for building applications on top of the
 
 ## 🚀 Deploy in One Click
 
-No command line required. Pick a platform and click:
+No command line required. Pick a platform:
 
-[![Deploy to Cloudflare](https://deploy.workers.cloudflare.com/button)](https://deploy.workers.cloudflare.com/?url=https://github.com/daomessage/securechat-pwa)
+### Vercel / Netlify — 直接点按钮即可
+
 [![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https://github.com/daomessage/securechat-pwa&project-name=my-daomessage&repository-name=my-daomessage)
 [![Deploy to Netlify](https://www.netlify.com/img/deploy/button.svg)](https://app.netlify.com/start/deploy?repository=https://github.com/daomessage/securechat-pwa)
 
-In under 2 minutes you'll get your own `https://<your-name>.pages.dev` (or `.vercel.app` / `.netlify.app`). The app talks to the free public relay `relay.daomessage.com` by default — zero-knowledge, your messages stay E2E encrypted.
+Vercel / Netlify 会自动帮你 fork 到你的 GitHub,然后部署。2 分钟拿到 `<x>.vercel.app` / `<x>.netlify.app`。
 
-See **[docs/DEPLOY.md](./DEPLOY.md)** for step-by-step screenshots and troubleshooting.
+### Cloudflare — 需要先 fork(2 步)
+
+Cloudflare 要求你先 fork 到自己 GitHub,它才能读到仓库内容:
+
+1. 点 **[Fork this repository](https://github.com/daomessage/securechat-pwa/fork)** 到你的 GitHub
+2. 点 [![Deploy to Cloudflare](https://deploy.workers.cloudflare.com/button)](https://deploy.workers.cloudflare.com/?url=https://github.com/daomessage/securechat-pwa) — 在 URL 输入框里把 `daomessage` 改成你的 GitHub 用户名
+
+部署完拿到 `<x>.pages.dev`,中国用户访问最快。
+
+---
+
+所有平台的站都连接免费公共 relay `relay.daomessage.com`(零知识,端到端加密)。详见 **[DEPLOY.md](./DEPLOY.md)** 完整教程和故障排查。
 
 ---
 

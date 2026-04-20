@@ -90,6 +90,14 @@ We try hard to make fork-and-deploy work with zero config. If you see this, it's
    ```
 2. Redeploy
 
+### Build fails with Node version error
+
+The template requires Node 20+. Each platform uses a different default:
+
+- **Cloudflare Pages**: Default Node 22 (new projects). If you see an older Node error, go to Project Settings → Environment variables → add `NODE_VERSION=22`
+- **Vercel**: Reads `engines.node` from `package.json` (already set to `>=20`). Should Just Work.
+- **Netlify**: Reads `netlify.toml` (bundled in the repo, pins Node 22). Should Just Work.
+
 ### The app loads but can't connect to relay
 
 Check browser DevTools → Console. You'll see messages like "WS connection failed". Possible causes:

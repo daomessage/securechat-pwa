@@ -1,0 +1,40 @@
+# Netlify Deploy Button 自动部署配置
+# 用户点 README 里的 "Deploy to Netlify" 按钮时 Netlify 会读这个文件
+
+[build]
+  command = "npm run build"
+  publish = "dist"
+
+[build.environment]
+  NODE_VERSION = "22"
+  NPM_VERSION = "10"
+
+# SPA fallback: 所有未匹配静态文件的请求返回 index.html, 让 React 路由接管
+# /install 是独立静态页, Netlify 会先 serve 实际文件, 不走这个 fallback
+[[redirects]]
+  from = "/*"
+  to = "/index.html"
+  status = 200
+
+# 安全 headers (对齐 _headers 配置, 但 Netlify 也读 netlify.toml 里的 header)
+[[headers]]
+  for = "/*"
+  [headers.values]
+    X-Frame-Options = "DENY"
+    X-Content-Type-Options = "nosniff"
+    Referrer-Policy = "strict-origin-when-cross-origin"
+    Permissions-Policy = "camera=(self), microphone=(self), geolocation=()"
+    Strict-Transport-Security = "max-age=31536000; includeSubDomains; preload"
+
+# Service Worker 不缓存
+[[headers]]
+  for = "/sw.js"
+  [headers.values]
+    Cache-Control = "no-cache, no-store, must-revalidate"
+    Service-Worker-Allowed = "/"
+
+# Vite 带 hash 的产物永久缓存
+[[headers]]
+  for = "/assets/*"
+  [headers.values]
+    Cache-Control = "public, max-age=31536000, immutable"

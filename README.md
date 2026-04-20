@@ -2,6 +2,20 @@
 
 This is the official Web/PWA boilerplate for building applications on top of the **DAO MESSAGE Zero-Knowledge Protocol**. This starter kit completely decouples the cryptographic and real-time messaging logic from the UI, allowing you to focus entirely on building your frontend experience.
 
+## 🚀 Deploy in One Click
+
+No command line required. Pick a platform and click:
+
+[![Deploy to Cloudflare](https://deploy.workers.cloudflare.com/button)](https://deploy.workers.cloudflare.com/?url=https://github.com/daomessage/securechat-pwa)
+[![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https://github.com/daomessage/securechat-pwa&project-name=my-daomessage&repository-name=my-daomessage)
+[![Deploy to Netlify](https://www.netlify.com/img/deploy/button.svg)](https://app.netlify.com/start/deploy?repository=https://github.com/daomessage/securechat-pwa)
+
+In under 2 minutes you'll get your own `https://<your-name>.pages.dev` (or `.vercel.app` / `.netlify.app`). The app talks to the free public relay `relay.daomessage.com` by default — zero-knowledge, your messages stay E2E encrypted.
+
+See **[docs/DEPLOY.md](./DEPLOY.md)** for step-by-step screenshots and troubleshooting.
+
+---
+
 ## ✨ Features
 - **UI Framework:** React 19 + Vite 8
 - **Styling:** Tailwind CSS 4
@@ -9,7 +23,7 @@ This is the official Web/PWA boilerplate for building applications on top of the
 - **Real-Time Engine:** Official `@daomessage_sdk/sdk` (handles E2EE, Websocket, IndexDB storage)
 - **PWA Ready:** Includes Service Worker configurations for Web Push Notifications
 
-## 🚀 Quick Start
+## 🛠️ Or Run Locally
 
 1. **Install Dependencies**
    ```bash

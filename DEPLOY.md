@@ -116,6 +116,27 @@ We try hard to make fork-and-deploy work with zero config. If you see this, it's
    ```
 2. Redeploy
 
+### "CORS error" / "Failed to fetch" (注册或登录时)
+
+**症状**:部署好了、站能打开,但注册/登录时 Network 面板显示 `CORS error` 或 `Failed to fetch`。Preflight OPTIONS 200 OK 但实际 POST 被浏览器拒绝。
+
+**原因**:relay 服务端的 CORS 策略没允许你的部署域名。
+
+**解决**:
+- 这是 relay 的 bug,**不是你部署的问题**
+- 已在 2026-04-21 修复:relay CORS 完全开放,支持任意 origin
+- 如果你还遇到:清浏览器缓存 + 刷新,或者等官方 relay 重新部署
+
+如果你自建了 relay,记得让 CORS echo 任意 origin(不要写白名单)。
+
+### package-lock.json out of sync / "npm ci EUSAGE"
+
+**症状**:CF 构建日志里 `Invalid: lock file's @daomessage_sdk/sdk@1.0.3 does not satisfy @daomessage_sdk/sdk@1.0.12`。
+
+**原因**:fork 的代码 `package.json` 和 `package-lock.json` 版本脱节。
+
+**解决**:Sync fork(见下方"如何更新"),再重新部署。官方上游已修复。
+
 ### "无法获取存储库内容" / "Unable to fetch repository contents" (Cloudflare)
 
 **症状**:点 Deploy Button 后,"克隆存储库"页面显示红色 `无法获取存储库内容` / `Unable to fetch repository contents`。

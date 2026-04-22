@@ -8,7 +8,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
 
     <!-- PWA Metadata -->
-    <link rel="manifest" href="/manifest.webmanifest" />
+    <!-- vite-plugin-pwa 会自动注入 <link rel="manifest">, 不要手写
+         (手写会缺少 Vite base path, GitHub Pages 子路径部署下会 404) -->
     <meta name="theme-color" content="#09090b" />
 
     <!-- iOS PWA -->

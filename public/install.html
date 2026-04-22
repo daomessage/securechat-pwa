@@ -145,6 +145,9 @@
     .deploy-vercel:hover { background: var(--fg-3); }
     .deploy-netlify { background: var(--teal); }
     .deploy-netlify:hover { background: var(--teal-hover); }
+    .deploy-gh { background: #24292e; }
+    .deploy-gh:hover { background: #444c56; }
+    .deploy-buttons { grid-template-columns: repeat(4, 1fr) !important; }
 
     /* FAQ */
     .faq-section { margin-top: 64px; max-width: 768px; margin-left: auto; margin-right: auto; }
@@ -269,11 +272,12 @@
           <li>要有 GitHub 账号</li>
         </ul>
         <div class="deploy-buttons">
-          <a href="https://github.com/daomessage/securechat-pwa/fork" class="deploy-cf" title="1. Fork this repo  2. Go to dash.cloudflare.com Pages  3. Connect to Git">CF*</a>
+          <a href="https://github.com/daomessage/securechat-pwa/fork" class="deploy-cf" title="1. Fork  2. dash.cloudflare.com Pages  3. Connect to Git">CF*</a>
           <a href="https://vercel.com/new/clone?repository-url=https://github.com/daomessage/securechat-pwa&project-name=my-daomessage&repository-name=my-daomessage" class="deploy-vercel" title="Deploy with Vercel">Vercel</a>
           <a href="https://app.netlify.com/start/deploy?repository=https://github.com/daomessage/securechat-pwa" class="deploy-netlify" title="Deploy to Netlify">Netlify</a>
+          <a href="https://github.com/daomessage/securechat-pwa/fork" class="deploy-gh" title="1. Fork  2. Settings → Pages → Source: GitHub Actions  3. 等 2 分钟">GH†</a>
         </div>
-        <div class="btn-hint">* CF 需先 fork 到你的 GitHub 再部署</div>
+        <div class="btn-hint">* CF 需先 fork &nbsp;&nbsp; † GH 国内访问慢</div>
       </div>
 
     </div>

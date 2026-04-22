@@ -92,6 +92,75 @@ All three give you HTTPS, PWA support, and a free subdomain. Pick whichever you 
 
 ---
 
+## 🐙 GitHub Pages — 免第三方平台
+
+模板内置了 GitHub Actions workflow (`.github/workflows/deploy-github-pages.yml`), 用户 fork 后
+只需要启用 GitHub Pages 就自动构建 + 部署,完全不需要 CF / Vercel / Netlify 账号。
+
+### Step 1 · Fork 模板
+
+[github.com/daomessage/securechat-pwa → Fork](https://github.com/daomessage/securechat-pwa/fork)
+
+### Step 2 · 启用 GitHub Pages
+
+1. 打开你 fork 的仓库
+2. **Settings** tab → 左栏 **Pages**
+3. **Source**: 从下拉菜单选 **"GitHub Actions"**(不是 "Deploy from a branch")
+4. 保存
+
+### Step 3 · 触发首次部署
+
+GitHub 需要一次新 commit 或手动运行 workflow 来触发首次部署:
+
+**方法 A · 手动触发**:
+1. Actions tab
+2. 左栏选 **"Deploy to GitHub Pages"**
+3. 右上角 **"Run workflow"** → **"Run workflow"** 确认
+4. 等 ~2 分钟
+
+**方法 B · 推个空 commit**:
+```bash
+git clone https://github.com/<你>/securechat-pwa
+cd securechat-pwa
+git commit --allow-empty -m "trigger pages deploy"
+git push
+```
+
+### Step 4 · 访问你的站
+
+部署成功后 URL 是:
+
+```
+https://<你的 GitHub 用户名>.github.io/<repo 名>/
+```
+
+例如 fork 后没改名:`https://alice.github.io/securechat-pwa/`
+
+### Step 5 · (可选)自定义域名
+
+1. Settings → Pages → **Custom domain** 填 `chat.yourname.com`
+2. DNS 加 CNAME:`chat.yourname.com CNAME <你>.github.io`
+3. 等待 DNS 生效 + GitHub 自动签 Let's Encrypt 证书(10-30 分钟)
+
+### ⚠️ GitHub Pages 限制
+
+- **中国大陆访问 github.io 很不稳定**(被污染常见)。海外用户没问题,国内用户需用自定义域名 + 境外 DNS
+- **100 GB/月带宽限制**(对大部分个人用户足够)
+- **`base` path 必须是 `/<repo>/`** — workflow 会自动配置,无需手工改代码
+- **PWA `start_url` 和 `scope`** 会自动跟随 base path(我们已处理)
+
+### 故障排查
+
+**workflow 没自动跑**:确认 Source 选了 "GitHub Actions" 不是 "Deploy from a branch"
+
+**404 找不到页面**:等 2-3 分钟 GitHub Pages 生效;检查 URL 末尾 `/` 不能丢
+
+**刷新子路由 404**:已用 `404.html` 技巧解决 (workflow 自动 copy index.html → 404.html)
+
+**资源路径错**:确认 Settings → Pages 里显示的 URL 和 `<user>.github.io/<repo>/` 一致,仓库改名的话要改 base path
+
+---
+
 ## 🔐 Your Privacy, Explained
 
 - **We (DAO Message) don't see your deployment.** The Deploy Button takes you to Cloudflare/Vercel/Netlify's own site. We never get your credentials, your repo access, or your analytics.

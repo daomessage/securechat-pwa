@@ -25,8 +25,14 @@ const __GIT_COMMIT__ = safeGitCmd('git rev-parse --short=8 HEAD', 'unknown')
 const __GIT_BRANCH__ = safeGitCmd('git rev-parse --abbrev-ref HEAD', 'unknown')
 const __GIT_DIRTY__ = safeGitCmd('git status --porcelain 2>/dev/null | head -c 1', '') ? '-dirty' : ''
 
+// GitHub Pages 子路径支持:
+//   用户部署到 https://<user>.github.io/<repo>/ 这种子路径时, 需要 base="/<repo>/"
+//   GitHub Actions 里注入 VITE_BASE 环境变量, 本地开发和其他平台 (CF/Vercel/Netlify) 都默认 "/"
+const BASE_PATH = process.env.VITE_BASE || '/'
+
 // https://vite.dev/config/
 export default defineConfig(({ mode }): UserConfig => ({
+  base: BASE_PATH,
   define: {
     __PWA_VERSION__: JSON.stringify(__PWA_VERSION__),
     __SDK_VERSION__: JSON.stringify(__SDK_VERSION__),
@@ -46,15 +52,15 @@ export default defineConfig(({ mode }): UserConfig => ({
         globPatterns: ['**/*.{js,css,html,ico,png,svg,woff2}']
       },
       manifest: {
-        id: '/',
+        id: BASE_PATH,
         name: 'DAO Message',
         short_name: 'DAO Message',
         description: '零知识端对端加密通讯，基于 DAO MESSAGE 协议。',
         theme_color: '#09090b',
         background_color: '#09090b',
         display: 'standalone',
-        start_url: '/',
-        scope: '/',
+        start_url: BASE_PATH,
+        scope: BASE_PATH,
         icons: [
           {
             src: 'pwa-192x192.png',

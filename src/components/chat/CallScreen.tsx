@@ -69,12 +69,17 @@ export function CallScreen() {
     return () => { loSub.unsubscribe(); reSub.unsubscribe(); };
   }, []);
 
-  // 把 localStream 挂到 <video>,任何一边变化都重 attach
+  // 把 localStream 挂到 <video>, 依赖 [stream, isVideo, callState] 覆盖所有变化时机
+  // 为什么需要 isVideo: <video> 元素在 isVideo=true 时才渲染, 第一次 effect 跑时
+  //   可能 ref.current 仍是 null (元素未 mount) → effect 后续不重跑就永远挂不上
+  // 加 play() 兜底 iOS Safari autoplay 拦截
   useEffect(() => {
-    if (localVideoRef.current && localStream && localVideoRef.current.srcObject !== localStream) {
+    if (!localVideoRef.current || !localStream) return;
+    if (localVideoRef.current.srcObject !== localStream) {
       localVideoRef.current.srcObject = localStream;
+      localVideoRef.current.play().catch(e => console.warn('[CallScreen] local autoplay blocked:', e));
     }
-  }, [localStream, callState]);
+  }, [localStream, callState, isVideo]);
 
   // remote 同理,attach 到大窗 video + 独立 audio 元素(autoplay 被拦时兜底)
   useEffect(() => {
@@ -130,27 +135,45 @@ export function CallScreen() {
   }, [answering]);
   const handleReject  = useCallback(() => { getCallModule()?.reject(); }, []);
 
-  // Bug 修复: 不要从 localVideoRef.srcObject 读 stream
-  // 原因: 音频通话时 localVideo 元素被 isVideo=false 隐藏且 srcObject 不 attach
-  //      即使视频通话, React 渲染时序可能让 srcObject 暂时为 null
-  // 正确做法: 从 SDK getLocalStream() 拿真实 MediaStream, DOM 只是展示层
+  // 修复要点 (2026-04-23 v2):
+  //   1. 从 SDK getLocalStream() 读流, 不依赖 DOM 元素 srcObject
+  //   2. 只操作 state === 'live' 的 track, ended track 残留不影响 (之前 forEach
+  //      所有 track 切 enabled, ended track 的 enabled 翻转但 live track 也跟着翻,
+  //      偶数次点击 live enabled 回到 true → 用户看到静音图标但实际没静音)
+  //   3. 用 React state 作为源真相 (setIsMuted 的新值),然后把所有 live track
+  //      统一设成 !newMuted, 避免多条 track 状态不一致
   const toggleMute = useCallback(() => {
     const stream = getCallModule()?.getLocalStream();
     if (!stream) return;
-    const tracks = stream.getAudioTracks();
-    if (tracks.length === 0) return;
-    tracks.forEach(t => { t.enabled = !t.enabled; });
-    // 以第一个轨的状态为准刷新 UI (所有轨 enabled 一致)
-    setIsMuted(!tracks[0].enabled);
+    const liveAudio = stream.getAudioTracks().filter(t => t.readyState === 'live');
+    if (liveAudio.length === 0) {
+      console.warn('[CallScreen] toggleMute: no live audio track');
+      return;
+    }
+    // React 闭包读当前 isMuted 作为翻转依据
+    setIsMuted(prev => {
+      const next = !prev;
+      // track.enabled=false → 发送端发 silence frame, 对方听不到
+      liveAudio.forEach(t => { t.enabled = !next; });
+      console.log(`[CallScreen] mute → ${next}, live audio tracks now enabled=${!next}`);
+      return next;
+    });
   }, []);
 
   const toggleCam = useCallback(() => {
     const stream = getCallModule()?.getLocalStream();
     if (!stream) return;
-    const tracks = stream.getVideoTracks();
-    if (tracks.length === 0) return;
-    tracks.forEach(t => { t.enabled = !t.enabled; });
-    setIsCamOff(!tracks[0].enabled);
+    const liveVideo = stream.getVideoTracks().filter(t => t.readyState === 'live');
+    if (liveVideo.length === 0) {
+      console.warn('[CallScreen] toggleCam: no live video track');
+      return;
+    }
+    setIsCamOff(prev => {
+      const next = !prev;
+      liveVideo.forEach(t => { t.enabled = !next; });
+      console.log(`[CallScreen] cam → ${next}, live video tracks now enabled=${!next}`);
+      return next;
+    });
   }, []);
 
   // 无通话时不渲染任何内容
@@ -178,37 +201,59 @@ export function CallScreen() {
         <div className="absolute inset-0 bg-gradient-to-b from-zinc-900 via-zinc-950 to-black" />
       )}
 
-      {/* 主体内容 */}
-      <div className="relative z-10 flex flex-col h-full">
+      {/* 主体内容 · pointer-events-none 让 video 元素可被点击 (按钮区域单独启用 pointer-events) */}
+      <div className="relative z-10 flex flex-col h-full pointer-events-none">
 
-        {/* 顶部：头像 + 对方名称 + 状态 */}
-        <div className="flex flex-col items-center pt-20 pb-6 px-6">
-          <div className="w-24 h-24 rounded-full flex items-center justify-center mb-5 shadow-2xl
-                          bg-gradient-to-br from-blue-500 via-violet-500 to-purple-600
-                          ring-4 ring-white/10">
-            <span className="text-white text-3xl font-bold">
-              {callRemoteAlias ? callRemoteAlias.slice(0, 2).toUpperCase() : '??'}
+        {/* 顶部 · 视频连接后变紧凑 (只在顶部状态栏显示名字 + 计时 + 加密徽章),
+            让 remoteVideo 背景画面占满中间区域不被遮挡 */}
+        {isVideo && callState === 'connected' ? (
+          // 视频通话已接通: 紧凑顶栏 (名字 + 计时徽章)
+          <div className="flex items-center justify-between px-5 pt-3 pb-2 bg-gradient-to-b from-black/40 to-transparent">
+            <div className="flex items-center gap-2">
+              <div className="w-8 h-8 rounded-full bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center shadow">
+                <span className="text-white text-xs font-bold">
+                  {callRemoteAlias ? callRemoteAlias.slice(0, 2).toUpperCase() : '??'}
+                </span>
+              </div>
+              <div className="flex flex-col">
+                <span className="text-white text-sm font-semibold drop-shadow">{callRemoteAlias}</span>
+                <span className="font-mono text-green-400 text-xs drop-shadow">{fmtDuration(durationSec)}</span>
+              </div>
+            </div>
+            <span className="px-2 py-0.5 rounded-full text-[10px] text-green-400 border border-green-500/40 bg-green-500/10 backdrop-blur-sm">
+              🔒 E2EE
             </span>
           </div>
+        ) : (
+          // 呼叫中 / 响铃中 / 音频通话: 大头像 + 名字 + 状态 (原设计)
+          <div className="flex flex-col items-center pt-20 pb-6 px-6">
+            <div className="w-24 h-24 rounded-full flex items-center justify-center mb-5 shadow-2xl
+                            bg-gradient-to-br from-blue-500 via-violet-500 to-purple-600
+                            ring-4 ring-white/10">
+              <span className="text-white text-3xl font-bold">
+                {callRemoteAlias ? callRemoteAlias.slice(0, 2).toUpperCase() : '??'}
+              </span>
+            </div>
 
-          <h1 className="text-white text-2xl font-semibold tracking-tight mb-1 drop-shadow-lg">
-            {callRemoteAlias || '未知联系人'}
-          </h1>
+            <h1 className="text-white text-2xl font-semibold tracking-tight mb-1 drop-shadow-lg">
+              {callRemoteAlias || '未知联系人'}
+            </h1>
 
-          <p className={`text-sm font-medium tracking-wide drop-shadow ${isEnding ? 'text-red-400' : 'text-blue-300'}`}>
-            {callState === 'connected' ? (
-              <span className="font-mono text-green-400">{fmtDuration(durationSec)}</span>
-            ) : (
-              STATE_LABELS[callState] ?? callState
+            <p className={`text-sm font-medium tracking-wide drop-shadow ${isEnding ? 'text-red-400' : 'text-blue-300'}`}>
+              {callState === 'connected' ? (
+                <span className="font-mono text-green-400">{fmtDuration(durationSec)}</span>
+              ) : (
+                STATE_LABELS[callState] ?? callState
+              )}
+            </p>
+
+            {callState === 'connected' && (
+              <span className="mt-2 px-2 py-0.5 rounded-full text-[10px] text-green-400 border border-green-500/40 bg-green-500/10">
+                🔒 端到端加密通话
+              </span>
             )}
-          </p>
-
-          {callState === 'connected' && (
-            <span className="mt-2 px-2 py-0.5 rounded-full text-[10px] text-green-400 border border-green-500/40 bg-green-500/10">
-              🔒 端到端加密通话
-            </span>
-          )}
-        </div>
+          </div>
+        )}
 
         {/* 中间弹性区（放本地小窗） */}
         <div className="flex-1 relative">
@@ -223,8 +268,8 @@ export function CallScreen() {
           )}
         </div>
 
-        {/* ── 底部控制栏 ─────────────────────────────────────────── */}
-        <div className="pb-16 px-8">
+        {/* ── 底部控制栏 · pointer-events-auto 覆盖父容器的 none, 让按钮可点 ── */}
+        <div className="pb-16 px-8 pointer-events-auto">
 
           {/* 通话中：静音 + 挂断 + 摄像头 */}
           {(callState === 'connected' || callState === 'connecting' || callState === 'calling') && (

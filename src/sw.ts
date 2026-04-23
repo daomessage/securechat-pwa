@@ -82,21 +82,26 @@ self.addEventListener('push', ((event: PushEvent) => {
 self.addEventListener('notificationclick', ((event: NotificationEvent) => {
   event.notification.close()
 
-  // 🔴 Zero-knowledge: 推送不包含 conversationId，仅唤醒应用
-  // WS 重连 + SDK sync 将自动获取所有新消息
+  // 🔴 Zero-knowledge: push payload 不含 conv_id (隐私保护)
+  // 方案: SW 唤醒 app 后, 发 OPEN_LATEST_UNREAD 消息, 让 app 自己从本地 IDB
+  //      找最新未读对话并跳转. App.tsx 监听 navigator.serviceWorker 的 message.
 
   const promiseChain = self.clients.matchAll({
     type: 'window',
     includeUncontrolled: true
-  }).then((windowClients) => {
-    // 优先聚焦现有窗口
+  }).then(async (windowClients) => {
+    // 1. 有已存在窗口 → 发消息 + focus
     for (const client of windowClients) {
       if (client.url.includes(self.location.origin)) {
+        try {
+          client.postMessage({ type: 'OPEN_LATEST_UNREAD' })
+        } catch { /* ignore, focus 仍然有效 */ }
         return client.focus()
       }
     }
-    // 没有现存窗口，新开一个
-    return self.clients.openWindow('/')
+    // 2. 没窗口 → 打开新窗口, URL 带参数 ?open=latest
+    //    App.tsx 冷启动读 URL 参数, 同样跳最新未读
+    return self.clients.openWindow('/?open=latest')
   })
 
   event.waitUntil(promiseChain)

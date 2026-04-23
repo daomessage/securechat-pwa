@@ -130,20 +130,27 @@ export function CallScreen() {
   }, [answering]);
   const handleReject  = useCallback(() => { getCallModule()?.reject(); }, []);
 
+  // Bug 修复: 不要从 localVideoRef.srcObject 读 stream
+  // 原因: 音频通话时 localVideo 元素被 isVideo=false 隐藏且 srcObject 不 attach
+  //      即使视频通话, React 渲染时序可能让 srcObject 暂时为 null
+  // 正确做法: 从 SDK getLocalStream() 拿真实 MediaStream, DOM 只是展示层
   const toggleMute = useCallback(() => {
-    if (localVideoRef.current?.srcObject) {
-      const tracks = (localVideoRef.current.srcObject as MediaStream).getAudioTracks();
-      tracks.forEach(t => { t.enabled = !t.enabled; });
-      setIsMuted(prev => !prev);
-    }
+    const stream = getCallModule()?.getLocalStream();
+    if (!stream) return;
+    const tracks = stream.getAudioTracks();
+    if (tracks.length === 0) return;
+    tracks.forEach(t => { t.enabled = !t.enabled; });
+    // 以第一个轨的状态为准刷新 UI (所有轨 enabled 一致)
+    setIsMuted(!tracks[0].enabled);
   }, []);
 
   const toggleCam = useCallback(() => {
-    if (localVideoRef.current?.srcObject) {
-      const tracks = (localVideoRef.current.srcObject as MediaStream).getVideoTracks();
-      tracks.forEach(t => { t.enabled = !t.enabled; });
-      setIsCamOff(prev => !prev);
-    }
+    const stream = getCallModule()?.getLocalStream();
+    if (!stream) return;
+    const tracks = stream.getVideoTracks();
+    if (tracks.length === 0) return;
+    tracks.forEach(t => { t.enabled = !t.enabled; });
+    setIsCamOff(!tracks[0].enabled);
   }, []);
 
   // 无通话时不渲染任何内容

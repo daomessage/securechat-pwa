@@ -13,7 +13,7 @@ import { initIMClient, client, getCallModule } from './lib/imClient';
 import { clearIdentity, loadIdentity, deriveIdentity } from '@daomessage_sdk/sdk';
 
 // ⚡ 版本戳：如果 Console 里能看到这行，说明浏览器已加载最新代码
-console.log('🔥 [SecureChat] BUILD v20260406-2217 loaded');
+console.log('🔥 [SecureChat] BUILD v1.0.13 (2026-04-23) loaded');
 
 function App() {
   const { route, activeChatId, setRoute, setSdkReady, setUserInfo, setActiveChatId, setDeferredPrompt } = useAppStore();
@@ -30,17 +30,63 @@ function App() {
   }, [setDeferredPrompt]);
 
   // ① 👤 App：监听 ServiceWorker 消息（PWA 后台被通知点击唤醒）
-  // 🔴 F05.3：SW 已不再发送 OPEN_CHAT 消息（零知识，push payload 不含 conv_id）
-  // 保留此监听器仅用于向后兼容旧版 SW 缓存
+  // 🔴 F05.3: push payload 零知识不含 conv_id. SW 收通知点击后发 OPEN_LATEST_UNREAD 消息,
+  // App 侧从 unreadCounts 找最大未读的对话并跳转.
+  // 同时保留 OPEN_CHAT 向后兼容旧 SW 缓存.
   useEffect(() => {
     const handleMessage = (event: MessageEvent) => {
-      if (event.data?.type === 'OPEN_CHAT' && event.data.conversationId) {
-        if (event.data.conversationId !== 'default') setActiveChatId(event.data.conversationId);
+      const data = event.data;
+      if (!data) return;
+
+      if (data.type === 'OPEN_CHAT' && data.conversationId) {
+        // 向后兼容: 旧 SW 还可能带 conv_id
+        if (data.conversationId !== 'default') setActiveChatId(data.conversationId);
+        setRoute('main');
+        return;
+      }
+
+      if (data.type === 'OPEN_LATEST_UNREAD') {
+        // 从 store 选 unreadCount 最大的对话
+        const unread = useAppStore.getState().unreadCounts;
+        let bestConv: string | null = null;
+        let bestCount = 0;
+        for (const [convId, count] of Object.entries(unread)) {
+          if (count > bestCount) {
+            bestCount = count;
+            bestConv = convId;
+          }
+        }
+        if (bestConv) {
+          setActiveChatId(bestConv);
+        }
+        // 无未读(可能对端撤回 / 状态同步滞后)也至少把 app 带回主页
         setRoute('main');
       }
     };
     navigator.serviceWorker?.addEventListener('message', handleMessage);
     return () => navigator.serviceWorker?.removeEventListener('message', handleMessage);
+  }, [setActiveChatId, setRoute]);
+
+  // 冷启动 URL 带 ?open=latest (SW 新开窗口场景) - 同样跳最新未读
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    if (params.get('open') === 'latest') {
+      // 清 URL 避免刷新时重复跳转
+      window.history.replaceState({}, document.title, window.location.pathname);
+      // 延迟 500ms 等 SDK 加载本地 IDB 填充 unreadCounts
+      setTimeout(() => {
+        const unread = useAppStore.getState().unreadCounts;
+        let bestConv: string | null = null;
+        let bestCount = 0;
+        for (const [convId, count] of Object.entries(unread)) {
+          if (count > bestCount) { bestCount = count; bestConv = convId; }
+        }
+        if (bestConv) {
+          setActiveChatId(bestConv);
+          setRoute('main');
+        }
+      }, 500);
+    }
   }, [setActiveChatId, setRoute]);
 
   // ② GOAWAY 监听：被其他设备踢下线时弹出全屏提示

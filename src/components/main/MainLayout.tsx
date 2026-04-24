@@ -20,16 +20,16 @@ export function MainLayout() {
       <NetworkBanner />
       {/* 跨平台安装横幅:iOS Safari 引导 + Android Chrome 一键装 */}
       <InstallBanner />
-      <div className="flex-1 overflow-y-auto scroll-contain w-full max-w-2xl mx-auto flex flex-col relative pb-[calc(env(safe-area-inset-bottom)+70px)]">
+      <div className="flex-1 overflow-y-auto scroll-contain w-full max-w-2xl mx-auto flex flex-col relative pb-[calc(env(safe-area-inset-bottom)+56px)]">
         {activeTab === 'messages' && <MessagesTab />}
         {activeTab === 'channels' && <ChannelsTab />}
         {activeTab === 'contacts' && <ContactsTab />}
         {activeTab === 'settings' && <SettingsTab />}
       </div>
       
-      {/* 底部 Tab 栏 */}
-      <div className="fixed bottom-0 left-0 right-0 z-50 bg-zinc-950/90 backdrop-blur-md border-t border-zinc-900 pb-safe">
-        <div className="flex items-center justify-around h-16 max-w-2xl mx-auto px-4 pb-2">
+      {/* 底部 Tab 栏 · design tokens: 高 56 (h-14) + pb-safe, 顶部 border.default */}
+      <div className="fixed bottom-0 left-0 right-0 z-50 bg-zinc-950/90 backdrop-blur-md border-t border-zinc-800 pb-safe">
+        <div className="flex items-center justify-around h-14 max-w-2xl mx-auto px-4">
           <TabButton tab="messages" current={activeTab} onClick={() => setActiveTab('messages')} label="会话" badge={totalUnread} icon={<MessageSquare className="w-6 h-6" />} />
           <TabButton tab="channels" current={activeTab} onClick={() => setActiveTab('channels')} label="频道" icon={<Hash className="w-6 h-6" />} />
           <TabButton tab="contacts" current={activeTab} onClick={() => setActiveTab('contacts')} label="联系人" badge={pendingRequestCount} icon={<Users2 className="w-6 h-6" />} />
@@ -40,10 +40,11 @@ export function MainLayout() {
   );
 }
 
+// TabButton · 图标 24 (w-6 h-6) / 文字 text-xs (12) / 激活 BrandPrimary blue-500 / 未激活 TextMuted zinc-500
 function TabButton({ tab, current, label, badge, icon, onClick }: { tab: string, current: string, label: string, badge?: number, icon: React.ReactNode, onClick: () => void }) {
   const active = tab === current;
   return (
-    <button onClick={onClick} className={`flex flex-col items-center justify-center flex-1 py-1 relative transition-colors ${active ? 'text-blue-500' : 'text-zinc-500 hover:text-zinc-300'}`}>
+    <button onClick={onClick} className={`flex flex-col items-center justify-center flex-1 relative transition-colors ${active ? 'text-blue-500' : 'text-zinc-500 hover:text-zinc-300'}`}>
       <div className="relative">
         {icon}
         {(badge ?? 0) > 0 && (
@@ -52,7 +53,7 @@ function TabButton({ tab, current, label, badge, icon, onClick }: { tab: string,
           </span>
         )}
       </div>
-      <span className="text-[10px] font-medium mt-1">{label}</span>
+      <span className="text-xs font-medium mt-0.5">{label}</span>
     </button>
   );
 }

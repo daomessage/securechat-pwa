@@ -82,7 +82,7 @@ export function Recover() {
             <button 
               onClick={handleRecover} 
               disabled={loading}
-              className="flex-[2] bg-blue-600 hover:bg-blue-700 py-3 rounded-lg font-medium shadow-lg shadow-blue-900/20 transition-colors disabled:opacity-50 flex items-center justify-center"
+              className="flex-[2] bg-blue-500 hover:bg-blue-600 py-3 rounded-lg font-medium shadow-lg shadow-blue-900/20 transition-colors disabled:opacity-50 flex items-center justify-center"
             >
               {loading ? <Loader2 className="w-5 h-5 animate-spin" /> : '恢复账户'}
             </button>

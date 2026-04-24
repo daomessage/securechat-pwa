@@ -183,8 +183,8 @@ export function ChatWindow() {
       {/* h-[100dvh] = dynamic viewport height, 手机浏览器地址栏收缩/键盘弹出时自动调整,避免输入框被推出屏幕外
           原来用 h-screen (100vh) 在 iOS Safari / Android Chrome 上会包含地址栏占用的高度,导致底部输入栏看不见。
           pb-safe 由子组件 ChatInputBar 自己负责 safe-area 填充 */}
-      {/* 顶部 Header */}
-      <div className="flex items-center p-3 border-b border-zinc-900 bg-zinc-950/80 backdrop-blur-md z-10 sticky top-0 shrink-0">
+      {/* 顶部 Header · design tokens: 高 56 (py 3 + 32 图标) / border.default zinc-800 */}
+      <div className="flex items-center p-3 border-b border-zinc-800 bg-zinc-950/80 backdrop-blur-md z-10 sticky top-0 shrink-0">
         <button onClick={() => setActiveChatId(null)} className="p-2 -ml-2 text-zinc-400 hover:text-white transition-colors flex items-center">
           <ChevronLeft className="w-6 h-6 pointer-events-none" />
         </button>
@@ -312,8 +312,10 @@ export function ChatWindow() {
               <div key={m.id} className={cn("flex w-full py-2", m.isMe ? "justify-end" : "justify-start")}>
                 <div
                   className={cn(
-                    "max-w-[80%] rounded-2xl px-3 py-2 flex flex-col relative group",
-                    m.isMe ? "bg-blue-600 rounded-tr-sm text-white" : "bg-zinc-800 rounded-tl-sm text-zinc-100 border border-zinc-700/50"
+                    // design tokens: max-w 75%, px space.4 (16), py space.3 (12), radius.2xl (16)
+                    // 尖角指向自己 · 自己消息右下 sm / 对方消息左下 sm
+                    "max-w-[75%] rounded-2xl px-4 py-3 flex flex-col relative group",
+                    m.isMe ? "bg-blue-600 rounded-br-sm text-white" : "bg-zinc-800 rounded-bl-sm text-zinc-100 border border-zinc-700/50"
                   )}
                   onContextMenu={(e) => {
                     if (m.status !== 'failed') {

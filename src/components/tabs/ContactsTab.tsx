@@ -143,7 +143,7 @@ export function ContactsTab() {
           <button 
             disabled={searchLoading || !addId.trim()}
             onClick={() => handleSearch()}
-            className="px-4 py-2 bg-blue-600 hover:bg-blue-700 disabled:opacity-50 text-white text-sm font-medium rounded-lg transition-colors"
+            className="px-4 py-2 bg-blue-500 hover:bg-blue-600 disabled:opacity-50 text-white text-sm font-medium rounded-lg transition-colors"
           >
             {searchLoading ? <Loader2 className="w-4 h-4 animate-spin pointer-events-none" /> : '查找'}
           </button>

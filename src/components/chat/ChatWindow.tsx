@@ -498,7 +498,7 @@ export function ChatWindow() {
 
             <div className="flex gap-3 mt-6">
               <button onClick={() => setShowSecurityModal(false)} className="flex-1 py-2.5 rounded-lg text-sm bg-zinc-800 hover:bg-zinc-700 text-zinc-300 transition-colors">取消</button>
-              <button onClick={handleMarkVerified} className="flex-1 py-2.5 rounded-lg text-sm bg-blue-600 hover:bg-blue-700 font-medium transition-colors">确认可信</button>
+              <button onClick={handleMarkVerified} className="flex-1 py-2.5 rounded-lg text-sm bg-blue-500 hover:bg-blue-600 font-medium transition-colors">确认可信</button>
             </div>
           </div>
         </div>

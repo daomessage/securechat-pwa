@@ -65,7 +65,7 @@ export function SetNickname() {
           <button
             onClick={handleComplete}
             disabled={loading}
-            className="w-full flex justify-center items-center py-3 bg-blue-600 hover:bg-blue-700 disabled:opacity-50 rounded-lg font-medium transition-colors"
+            className="w-full flex justify-center items-center py-3 bg-blue-500 hover:bg-blue-600 disabled:opacity-50 rounded-lg font-medium transition-colors"
           >
             {loading ? <Loader2 className="w-5 h-5 animate-spin" /> : '完成注册并进入'}
           </button>

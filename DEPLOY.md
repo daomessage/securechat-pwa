@@ -258,11 +258,13 @@ Relay server source is at `github.com/daomessage/securechat-relay` (coming soon 
 
 ---
 
-## 🤝 Advanced: Mobile App Clip (iOS)
+## 🤝 Advanced: Mobile Web Clip (iOS)
 
-Want to give iOS users a **one-tap install** that's smoother than "Add to Home Screen"? Use signed `.mobileconfig` (Web Clip) files.
+Want to give iOS users a **one-tap install** that's smoother than "Add to Home Screen"? Web Clip serves a `.mobileconfig` file users tap to install.
 
-See `docs/WEBCLIP_CERT_SETUP.md` in the main repo — explains how to buy a $15/year S/MIME cert and serve signed profiles.
+**The default flow is unsigned — works out of the box, $0 cost.** iOS shows an orange "Unsigned" label users can ignore (it's a warning about provenance, not security; the install itself is exactly identical to a signed one).
+
+If you want the green "Verified by [your name]" label, you can optionally configure an S/MIME cert (~$12/yr) — see `docs/WEBCLIP_CERT_SETUP.md` for the optional cert pipeline.
 
 ---
 

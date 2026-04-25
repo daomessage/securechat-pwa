@@ -139,6 +139,7 @@
       color: #fff;
       transition: background-color .15s;
     }
+    .deploy-buttons { grid-template-columns: repeat(4, 1fr); }
     .deploy-cf { background: var(--orange); }
     .deploy-cf:hover { background: var(--orange-hover); }
     .deploy-vercel { background: var(--bg-2); }
@@ -147,7 +148,6 @@
     .deploy-netlify:hover { background: var(--teal-hover); }
     .deploy-gh { background: #24292e; }
     .deploy-gh:hover { background: #444c56; }
-    .deploy-buttons { grid-template-columns: repeat(4, 1fr) !important; }
 
     /* FAQ */
     .faq-section { margin-top: 64px; max-width: 768px; margin-left: auto; margin-right: auto; }
@@ -248,10 +248,10 @@
         <div class="emoji">🎯</div>
         <h2>极速装 (iOS)</h2>
         <div class="meta">免费 · 仅 iOS · 30 秒</div>
-        <p class="desc">下载一个签名的描述文件 (<code>.mobileconfig</code>),iPhone 一键装到主屏。比"添加到主屏幕"少两步。</p>
+        <p class="desc">下载一个 Apple 描述文件 (<code>.mobileconfig</code>),iPhone 一键装到主屏。比"添加到主屏幕"少两步。</p>
         <ul>
           <li>点链接即下载</li>
-          <li>Apple 签名"已验证"</li>
+          <li>iOS 会显示橙色"未签名"——正常,可以放心装</li>
           <li>需去"设置"里安装描述文件</li>
           <li>IndexedDB 与 Safari 共享分区</li>
         </ul>
@@ -321,6 +321,30 @@
         <div class="answer">
           <p>不会. Web Clip 描述文件只含一件事: 把一个 URL (chat.daomessage.com) 放到主屏图标. 无法装 App, 无法访问通讯录, 无法读短信.</p>
           <p>你可以打开描述文件 XML 亲自看. 装完后在"设置 → VPN 与设备管理"可随时卸载.</p>
+        </div>
+      </details>
+
+      <details>
+        <summary>为什么 iOS 显示"未签名 / 未验证"橙色字?</summary>
+        <div class="answer">
+          <p>因为我们的描述文件**确实没有签名** — 这是有意的选择,不是 bug.</p>
+          <p>给 <code>.mobileconfig</code> 签名需要一种特殊的 S/MIME 证书 (EKU 含 <code>emailProtection</code>),<b>普通 HTTPS 证书</b> (Cloudflare / Let's Encrypt 免费的那种) <b>EKU 是 <code>serverAuth</code>,不能签</b>. iOS 会拒绝,仍然显示红字.</p>
+          <p>能签的证书 ($12-20/年) 拿到后唯一的视觉收益是:橙色"未签名"变成"已验证 by [我们的名字]". <b>装出来的 Web Clip 完全一样</b> — 同一个 URL、同一个图标、同一个推送、同一个端到端加密.</p>
+          <p>我们选择把这 $12 省掉,因为:</p>
+          <ul>
+            <li><b>橙色"未签名" ≠ 不安全</b>. 它的字面意思是"这个文件没有数字签名告诉你它来自谁"</li>
+            <li>你已经从 <code>chat.daomessage.com</code> 这个 HTTPS 站点下载,Cloudflare 证书已经证明了来源</li>
+            <li>装出来的图标只能打开一个 URL,无法获取系统权限</li>
+          </ul>
+          <p>如果你介意,Step 2 可以用 Step 1 (Safari 分享 → 添加到主屏幕) 替代,效果完全一样.</p>
+        </div>
+      </details>
+
+      <details>
+        <summary>我自部署的版本能不能签?</summary>
+        <div class="answer">
+          <p>能. 我们的 relay 代码支持签名 — 配置 <code>WEBCLIP_SIGNING_CERT_PATH</code> 等三个环境变量指向你的 PEM 证书,启动时自动启用. 没配 = 走未签名路径.</p>
+          <p>详见仓库 <a href="https://github.com/daomessage/securechat-pwa/blob/main/docs/WEBCLIP_CERT_SETUP.md"><code>docs/WEBCLIP_CERT_SETUP.md</code></a> — 包含证书选购、转换脚本、AWS 部署一条龙.</p>
         </div>
       </details>
 

@@ -1,7 +1,7 @@
 {
   "name": "dao-message-pwa",
   "private": true,
-  "version": "1.0.14",
+  "version": "1.0.15",
   "type": "module",
   "engines": {
     "node": ">=20.0.0"
@@ -16,7 +16,7 @@
     "deploy:cf:preview": "npm run build && npx wrangler pages deploy dist --project-name securechat-pwa --branch preview --commit-dirty=true --commit-message=\"pwa preview deploy\""
   },
   "dependencies": {
-    "@daomessage_sdk/sdk": "^1.0.14",
+    "@daomessage_sdk/sdk": "^1.0.15",
     "@yudiel/react-qr-scanner": "^2.5.1",
     "clsx": "^2.1.1",
     "framer-motion": "^12.38.0",

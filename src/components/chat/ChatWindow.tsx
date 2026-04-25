@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { client, localMessageHandlers, localStatusHandlers, localTypingHandlers, getCallModule } from '../../lib/imClient';
-import { loadSession, loadIdentity, computeSecurityCode, markSessionVerified, fromBase64 } from '@daomessage_sdk/sdk';
+import { loadSession, loadIdentity, computeSecurityCode, fromBase64 } from '@daomessage_sdk/sdk';
 import type { SessionRecord, StoredMessage, TypingEvent } from '@daomessage_sdk/sdk';
 import { useAppStore } from '../../store/appStore';
 import { ShieldAlert, ShieldCheck, ChevronLeft, Loader2, Check, CheckCheck, Clock, Info, Phone, Video } from 'lucide-react';
@@ -9,6 +9,7 @@ import { Virtuoso } from 'react-virtuoso';
 
 import { ImageBubble, FileBubble, VoiceBubble } from './bubbles/MessageBubbles';
 import { ChatInputBar } from './ChatInputBar';
+import { SecurityCodeDialog } from './SecurityCodeDialog';
 
 const PAGE_SIZE = 20;
 
@@ -26,8 +27,6 @@ export function ChatWindow() {
   const virtuosoRef = useRef<any>(null);
 
   const [showSecurityModal, setShowSecurityModal] = useState(false);
-  const [inputCode, setInputCode] = useState('');
-  const [verifyError, setVerifyError] = useState('');
   const [contextMenu, setContextMenu] = useState<{ msgId: string; x: number; y: number } | null>(null);
   const [replyTo, setReplyTo] = useState<StoredMessage | null>(null);
   const [detailMsg, setDetailMsg] = useState<StoredMessage | null>(null);
@@ -123,22 +122,6 @@ export function ChatWindow() {
       setLoadingMore(false);
     }
   }, [activeChatId, loadingMore, hasMore, messages]);
-
-  const handleMarkVerified = async () => {
-    const targetCode = securityCode.slice(0, 8).toLowerCase();
-    const cleanInput = inputCode.trim().toLowerCase();
-    
-    if (cleanInput.length < 8) { setVerifyError('length'); return; }
-    
-    if (cleanInput.slice(0, 8) === targetCode) {
-      await markSessionVerified(activeChatId!);
-      setTrustVerified(true);
-      setShowSecurityModal(false);
-      setVerifyError('');
-    } else {
-      setVerifyError('mismatch');
-    }
-  };
 
   const formatTime = (ts: number) => {
     if (!ts) return '';
@@ -469,41 +452,14 @@ export function ChatWindow() {
         </div>
       )}
 
-      {/* Security Modal */}
-      {showSecurityModal && (
-        <div className="fixed inset-0 z-50 bg-black/60 flex items-center justify-center backdrop-blur-sm p-4 animate-in fade-in cursor-default" onClick={() => setShowSecurityModal(false)}>
-          <div className="bg-zinc-950 border border-zinc-800 rounded-2xl p-6 w-full max-w-sm shadow-2xl relative" onClick={e => e.stopPropagation()}>
-            <div className="mb-6 space-y-2">
-              <h3 className="text-xl font-bold flex items-center gap-2">
-                <ShieldCheck className="w-6 h-6 text-green-500" />
-                核对安全指纹
-              </h3>
-              <p className="text-zinc-400 text-xs">通过其他安全渠道确认前 8 个字符。如完全一致，代表无人窃听你们的端到端通信。</p>
-            </div>
-            
-            <div className="bg-zinc-900 border border-zinc-800 rounded-xl p-4 font-mono text-center text-xl tracking-[0.2em] break-all leading-tight">
-              <span className="text-white font-bold">{securityCode.slice(0, 8)}</span>
-              <span className="text-zinc-600">{securityCode.slice(8, 20)}...</span>
-            </div>
-
-            <div className="mt-4 space-y-3">
-              <input 
-                type="text" 
-                value={inputCode}
-                onChange={e => setInputCode(e.target.value)}
-                placeholder="在此输入对方安全码前8位核验"
-                className="w-full bg-zinc-900 border border-zinc-800 rounded-lg py-3 px-4 outline-none focus:border-blue-500 text-sm tracking-wider font-mono text-center"
-              />
-              {verifyError === 'length' && <p className="text-yellow-500 text-[10px] text-center">请输入完整的8位凭证</p>}
-              {verifyError === 'mismatch' && <p className="text-red-500 text-[10px] text-center font-bold bg-red-500/10 py-1 rounded">⚠️ 不匹配！这或许存在伪造，已阻止确认。</p>}
-            </div>
-
-            <div className="flex gap-3 mt-6">
-              <button onClick={() => setShowSecurityModal(false)} className="flex-1 py-2.5 rounded-lg text-sm bg-zinc-800 hover:bg-zinc-700 text-zinc-300 transition-colors">取消</button>
-              <button onClick={handleMarkVerified} className="flex-1 py-2.5 rounded-lg text-sm bg-blue-500 hover:bg-blue-600 font-medium transition-colors">确认可信</button>
-            </div>
-          </div>
-        </div>
+      {/* P2-1: 安全码核验 modal 已抽独立组件 SecurityCodeDialog */}
+      {showSecurityModal && activeChatId && (
+        <SecurityCodeDialog
+          conversationId={activeChatId}
+          securityCode={securityCode}
+          onClose={() => setShowSecurityModal(false)}
+          onVerified={() => setTrustVerified(true)}
+        />
       )}
     </div>
   );

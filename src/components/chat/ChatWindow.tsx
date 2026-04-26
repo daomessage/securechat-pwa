@@ -255,7 +255,19 @@ export function ChatWindow() {
               } catch (e: any) {
                 console.error('🟠 [App] 视频呼叫失败 捕获异常:', e);
                 store.setCallState(null); // 重置 CallScreen
-                alert(`呼叫失败: ${e?.message || '未知错误(可能是摄像头/麦克风权限被拒)'}`);
+                const msg = String(e?.message || '');
+                // 区分 gUM 错误类型,给用户更明确的提示
+                let hint = '请重试';
+                if (/Permission|denied|NotAllowedError/i.test(msg)) {
+                  hint = '请在浏览器地址栏左侧的权限图标里允许摄像头和麦克风';
+                } else if (/NotFoundError|DevicesNotFound|找不到|未找到/i.test(msg)) {
+                  hint = '没有检测到摄像头设备,请确认设备已连接';
+                } else if (/NotReadableError|TrackStartError|被占用/i.test(msg)) {
+                  hint = '摄像头被其他应用占用,请关闭其他视频软件后重试';
+                } else if (/timeout/i.test(msg)) {
+                  hint = '摄像头响应超时,请检查浏览器是否被禁用了媒体权限';
+                }
+                alert(`视频呼叫失败:${hint}\n\n详细错误:${msg || '未知'}`);
               }
             }}
             className="p-2 text-zinc-400 hover:text-white active:scale-90 transition-all rounded-lg hover:bg-zinc-800"

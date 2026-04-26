@@ -16,7 +16,7 @@
     "deploy:cf:preview": "npm run build && CLOUDFLARE_ACCOUNT_ID=00deac07dd217d949d237e25616801d9 npx wrangler pages deploy dist --project-name securechat-pwa --branch preview --commit-dirty=true --commit-message=\"pwa preview deploy\""
   },
   "dependencies": {
-    "@daomessage_sdk/sdk": "^1.0.24",
+    "@daomessage_sdk/sdk": "^1.0.25",
     "@yudiel/react-qr-scanner": "^2.5.1",
     "clsx": "^2.1.1",
     "framer-motion": "^12.38.0",

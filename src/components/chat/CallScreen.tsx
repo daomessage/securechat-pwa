@@ -6,6 +6,7 @@
  */
 
 import { useEffect, useRef, useState, useCallback } from 'react';
+import { useShallow } from 'zustand/react/shallow';
 import { useAppStore } from '../../store/appStore';
 import { getCallModule } from '../../lib/imClient';
 import { PhoneOff, PhoneIncoming, Mic, MicOff, Video, VideoOff } from 'lucide-react';
@@ -22,11 +23,13 @@ const STATE_LABELS: Record<string, string> = {
 };
 
 export function CallScreen() {
-  const { callState, callRemoteAlias, callType } = useAppStore(s => ({
-    callState: s.callState,
-    callRemoteAlias: s.callRemoteAlias,
-    callType: s.callType,
-  }));
+  const { callState, callRemoteAlias, callType } = useAppStore(
+    useShallow(s => ({
+      callState: s.callState,
+      callRemoteAlias: s.callRemoteAlias,
+      callType: s.callType,
+    }))
+  );
 
   const localVideoRef  = useRef<HTMLVideoElement>(null);
   const remoteVideoRef = useRef<HTMLVideoElement>(null);

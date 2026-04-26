@@ -13,7 +13,7 @@ import { initIMClient, client, getCallModule } from './lib/imClient';
 import { clearIdentity, loadIdentity, deriveIdentity } from '@daomessage_sdk/sdk';
 
 // ⚡ 版本戳：如果 Console 里能看到这行，说明浏览器已加载最新代码
-console.log('🔥 [SecureChat] BUILD v1.0.17 (2026-04-26) loaded');
+console.log('🔥 [SecureChat] BUILD v1.0.18 (2026-04-26) loaded');
 
 function App() {
   const { route, activeChatId, setRoute, setSdkReady, setUserInfo, setActiveChatId, setDeferredPrompt } = useAppStore();

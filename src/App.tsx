@@ -13,7 +13,7 @@ import { initIMClient, client, getCallModule } from './lib/imClient';
 import { clearIdentity, loadIdentity, deriveIdentity } from '@daomessage_sdk/sdk';
 
 // ⚡ 版本戳：如果 Console 里能看到这行，说明浏览器已加载最新代码
-console.log('🔥 [SecureChat] BUILD v1.0.14 (2026-04-23) loaded');
+console.log('🔥 [SecureChat] BUILD v1.0.17 (2026-04-26) loaded');
 
 function App() {
   const { route, activeChatId, setRoute, setSdkReady, setUserInfo, setActiveChatId, setDeferredPrompt } = useAppStore();
@@ -111,6 +111,9 @@ function App() {
         const nickname = session.nickname || localStorage.getItem('sc_nickname') || 'Me';
         setUserInfo('', session.aliasId, nickname);
         
+        // initCalls 必须在 initIMClient (WS connect) 之前完成，
+        // 否则 WS 建立后来电信令到达时 CallModule 还是 null，导致第一次来电无法响应。
+        // loadIdentity 是异步，所以把 initIMClient 移到其 then 链里串行执行。
         loadIdentity().then(ident => {
           if (ident && ident.mnemonic) {
             try {
@@ -141,8 +144,13 @@ function App() {
               console.error('[App] initCalls failed:', e);
             }
           }
+          // WS 在 CallModule 初始化完成后才建立连接，确保来电信令到达时回调已注册
+          initIMClient();
+        }).catch(e => {
+          console.error('[App] loadIdentity failed:', e);
+          // identity 加载失败也要建立 WS（消息功能不受通话影响）
+          initIMClient();
         });
-        initIMClient(); // SDK建立WebSocket
 
         if (chatId && chatId !== 'default') {
           setActiveChatId(chatId);

@@ -22,7 +22,11 @@ const STATE_LABELS: Record<string, string> = {
 };
 
 export function CallScreen() {
-  const { callState, callRemoteAlias, callType } = useAppStore();
+  const { callState, callRemoteAlias, callType } = useAppStore(s => ({
+    callState: s.callState,
+    callRemoteAlias: s.callRemoteAlias,
+    callType: s.callType,
+  }));
 
   const localVideoRef  = useRef<HTMLVideoElement>(null);
   const remoteVideoRef = useRef<HTMLVideoElement>(null);
@@ -126,13 +130,19 @@ export function CallScreen() {
     if (answering) return;
     setAnswering(true);
     try {
-      await getCallModule()?.answer();
+      // 显式把 callType 传给 answer()，确保视频来电时被叫方也开摄像头。
+      // SDK answer() 靠 offer SDP 判断，但 onIncomingCall 的 isVideo 解析偶尔
+      // 在某些移动端信令时序下会漏 video track，显式传参作为双重保险。
+      const mod = getCallModule();
+      if (!mod) return;
+      const isVideoCall = callType === 'video';
+      await (mod as any).answer({ audio: true, video: isVideoCall });
     } catch (e) {
       console.error('[Call] 接听失败', e);
     } finally {
       setAnswering(false);
     }
-  }, [answering]);
+  }, [answering, callType]);
   const handleReject  = useCallback(() => { getCallModule()?.reject(); }, []);
 
   // 修复要点 (2026-04-23 v2):

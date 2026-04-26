@@ -138,13 +138,14 @@ export function VoiceBubble({ text, conversationId, isMe }: { text: string; conv
   const parsed = React.useMemo(() => {
     try {
       const j = JSON.parse(text);
-      if (j.type === 'voice') return { key: j.key, duration: j.duration };
+      if (j.type === 'voice') return { key: j.key, duration: j.durationMs ?? j.duration ?? 0 };
     } catch {}
     if (text.startsWith('[voice]')) {
       const parts = text.replace('[voice]', '').split('|');
       return { key: parts[0], duration: Number(parts[1]) || 0 };
     }
     return { key: '', duration: 0 };
+    // NOTE: SDK 序列化字段是 durationMs，旧格式是 duration，两个都兼容
   }, [text]);
 
   const formatDuration = (ms: number) => {

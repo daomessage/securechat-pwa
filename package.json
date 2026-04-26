@@ -1,7 +1,7 @@
 {
   "name": "dao-message-pwa",
   "private": true,
-  "version": "1.0.15",
+  "version": "1.0.18",
   "type": "module",
   "engines": {
     "node": ">=20.0.0"
@@ -12,11 +12,11 @@
     "lint": "eslint .",
     "preview": "vite preview",
     "gen:splash": "npx pwa-asset-generator ./public/favicon.svg ./public/splash --background \"#09090b\" --splash-only --path-override /splash --manifest ./public/manifest.webmanifest --index ./index.html --log=false",
-    "deploy:cf": "npm run build && npx wrangler pages deploy dist --project-name securechat-pwa --branch main --commit-dirty=true --commit-message=\"pwa deploy from local\"",
-    "deploy:cf:preview": "npm run build && npx wrangler pages deploy dist --project-name securechat-pwa --branch preview --commit-dirty=true --commit-message=\"pwa preview deploy\""
+    "deploy:cf": "npm run build && CLOUDFLARE_ACCOUNT_ID=00deac07dd217d949d237e25616801d9 npx wrangler pages deploy dist --project-name securechat-pwa --branch main --commit-dirty=true --commit-message=\"pwa deploy from local\"",
+    "deploy:cf:preview": "npm run build && CLOUDFLARE_ACCOUNT_ID=00deac07dd217d949d237e25616801d9 npx wrangler pages deploy dist --project-name securechat-pwa --branch preview --commit-dirty=true --commit-message=\"pwa preview deploy\""
   },
   "dependencies": {
-    "@daomessage_sdk/sdk": "^1.0.15",
+    "@daomessage_sdk/sdk": "^1.0.18",
     "@yudiel/react-qr-scanner": "^2.5.1",
     "clsx": "^2.1.1",
     "framer-motion": "^12.38.0",

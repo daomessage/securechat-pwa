@@ -1,0 +1,61 @@
+name: Deploy to Cloudflare Pages
+
+# 用户 fork 后,如果选择用 GitHub Actions 方式（而不是 CF Dashboard Git 集成）部署到 CF Pages,
+# 启用此 workflow:
+#
+# 用户操作:
+#   1. Fork 这个仓库到自己 GitHub
+#   2. 在 Cloudflare Dashboard 手动创建一个空的 Pages 项目 (不绑 Git)
+#      Workers & Pages → Create → Pages → "Direct Upload" → 起个名字 → 跳过上传
+#   3. 在 GitHub 仓库 Settings → Secrets 里加两个 Secret:
+#        CF_ACCOUNT_ID  — Cloudflare Dashboard 右侧栏 Account ID
+#        CF_API_TOKEN   — dash.cloudflare.com/profile/api-tokens → 用 "Cloudflare Pages:Edit" 模板生成
+#   4. Actions tab → "Deploy to Cloudflare Pages" → Run workflow
+#   5. 访问 https://<你的项目名>.pages.dev
+#
+# ──────────────────────────────────────────────
+# 如果你已经在 CF Dashboard 里用 "Connect to Git" 连了 GitHub,
+# 这个 workflow 和那个 Git 集成会各自独立触发,可能重复部署。
+# 二选一就好: 要么用 CF Dashboard Git 集成, 要么启用这个 workflow (删掉另一个)。
+# ──────────────────────────────────────────────
+
+on:
+  push:
+    branches: [main, master]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  deployments: write   # 让 Cloudflare action 创建 GitHub Deployment 状态
+
+concurrency:
+  group: "cf-pages"
+  cancel-in-progress: false
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build
+        run: npm run build
+        # Cloudflare Pages 部署在根域名下 (pages.dev 或你的自定义域名),
+        # 不需要 VITE_BASE 子路径,保持默认 "/"
+
+      - name: Deploy to Cloudflare Pages
+        uses: cloudflare/wrangler-action@v3
+        with:
+          apiToken: ${{ secrets.CF_API_TOKEN }}
+          accountId: ${{ secrets.CF_ACCOUNT_ID }}
+          command: pages deploy dist --project-name=securechat-pwa --branch=main --commit-dirty=true
+          # 如果你的 CF Pages 项目名不是 securechat-pwa, 改上面的 --project-name

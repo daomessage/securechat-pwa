@@ -20,50 +20,82 @@ All three give you HTTPS, PWA support, and a free subdomain. Pick whichever you 
 
 ## 🚀 Cloudflare Pages (Recommended)
 
-> ⚠️ **重要**: 不要用 `deploy.workers.cloudflare.com/?url=...` 那种 "Deploy Button"。
-> CF 的 Deploy Button 实际走的是 **Worker** 创建流程,会误把我们的 PWA 当成 Worker,
-> 预填 `npx wrangler deploy`(错的!应该是 pages deploy)→ 构建失败。
->
-> **正确做法: 3 步手动**(总耗时 ~3 分钟)。
+两种方式二选一，效果完全相同。
 
-### Step 1 · Fork 模板到你的 GitHub
+---
 
-1. 打开 <https://github.com/daomessage/securechat-pwa>
-2. 右上角点 **Fork**
-3. Fork 到 `github.com/<你的用户名>/securechat-pwa`
+### 方式一 · CF Dashboard Git 集成（零代码，最省事）
 
-### Step 2 · 首次:授权 GitHub ↔ Cloudflare Pages
+> ⚠️ **不要**用 `deploy.workers.cloudflare.com/?url=...` 那种 Deploy Button — 会误当成 Worker 部署失败。
 
-(做过一次就跳到 Step 3)
+#### Step 1 · Fork 到你的 GitHub
 
-1. 打开 <https://dash.cloudflare.com/> 注册/登录 Cloudflare 免费账号
-2. 左侧 **Workers & Pages**
-3. 点 **Create** → 选 **Pages** tab(**不是** Workers tab!)
-4. 点 **Connect to Git**
-5. **Connect GitHub** → 弹窗授权
-6. 选 **Only select repositories** → 勾选你刚 fork 的 `securechat-pwa`
-7. **Install & Authorize**
+打开 <https://github.com/daomessage/securechat-pwa> → 右上角 **Fork**
 
-### Step 3 · 创建项目 + 部署
+#### Step 2 · 首次授权 GitHub ↔ CF Pages
 
-1. Connect to Git 页面选你 fork 的 `securechat-pwa`(Git 帐户下拉里)
-2. Begin setup
-3. **项目名**: 默认 `securechat-pwa` 或改成你想要的 `<name>`(这会是 `<name>.pages.dev`)
-4. **Framework preset**: 选 **Vite** (或保持 None,我们 `wrangler.toml` 会自动识别)
-5. **Build command**: `npm run build`
-6. **Build output directory**: `dist`
-7. **环境变量**(可选): 留空就好,默认连官方 relay.daomessage.com
-8. 点 **Save and Deploy**
-9. 等 ~90 秒
+（做过一次就直接跳 Step 3）
 
-**完成**。打开 `<name>.pages.dev`,注册账号,开始聊天。
+1. <https://dash.cloudflare.com/> 登录
+2. 左侧 **Workers & Pages** → **Create** → **Pages** tab
+3. **Connect to Git** → **Connect GitHub** → 弹窗授权
+4. 选 **Only select repositories** → 勾选你 fork 的 `securechat-pwa` → **Install & Authorize**
+
+#### Step 3 · 创建项目
+
+1. 选你 fork 的仓库 → **Begin setup**
+2. **Project name**: 改成你想要的名字(这就是你的 `<name>.pages.dev`)
+3. **Framework preset**: `Vite`
+4. **Build command**: `npm run build`
+5. **Build output directory**: `dist`
+6. **Save and Deploy** → 等 ~90 秒
+
+**完成！** 打开 `<name>.pages.dev`，之后每次 push 到 main 自动重新部署。
+
+---
+
+### 方式二 · GitHub Actions + Wrangler（CI 里显式控制）
+
+如果你想在 GitHub Actions 里看到部署日志、加测试步骤、或者用 CI 触发，用这个方式。
+
+#### Step 1 · Fork 到你的 GitHub
+
+同上。
+
+#### Step 2 · 在 CF 创建一个空项目
+
+1. <https://dash.cloudflare.com/> → **Workers & Pages** → **Create** → **Pages**
+2. 选 **Direct Upload** → 随便起个项目名(如 `securechat-pwa`) → **Create project** → 跳过上传
+
+#### Step 3 · 添加两个 GitHub Secrets
+
+打开你 fork 的仓库 → **Settings → Secrets and variables → Actions → New repository secret**:
+
+| Secret 名 | 取值 |
+|---|---|
+| `CF_ACCOUNT_ID` | CF Dashboard 右侧栏 Account ID |
+| `CF_API_TOKEN` | [生成 token](https://dash.cloudflare.com/profile/api-tokens) → 模板选 **"Cloudflare Pages: Edit"** |
+
+#### Step 4 · 启用 Workflow
+
+仓库已内置 `.github/workflows/deploy-cloudflare-pages.yml`，推送到 main 或手动触发即可：
+
+1. **Actions tab** → **Deploy to Cloudflare Pages** → **Run workflow**
+2. 等 ~2 分钟 → 访问 `https://<你的项目名>.pages.dev`
+
+> **如果你已经用了方式一**（CF Dashboard Git 集成），此 workflow 会和 CF 的 Git 集成各自独立触发，可能重复部署。二选一即可：要么在 CF Dashboard 断开 Git 连接，要么禁用这个 workflow。
+
+---
 
 ### Optional: Custom Domain
 
-1. In Cloudflare Pages dashboard → your project → **Custom domains** → **Set up a custom domain**
-2. Enter e.g. `chat.yourname.com`
-3. Follow CNAME instructions (auto if your domain is on Cloudflare)
-4. SSL cert is issued automatically in 5-10 minutes
+1. CF Pages 项目 → **Custom domains** → **Set up a custom domain**
+2. 填 `chat.yourname.com`
+3. 如果域名在 Cloudflare DNS 里 → 自动加 CNAME；否则手动添加：
+   ```
+   chat  CNAME  <你的项目名>.pages.dev
+   ```
+4. 5-10 分钟 SSL 自动签发
 
 ---
 
@@ -164,7 +196,7 @@ https://<你的 GitHub 用户名>.github.io/<repo 名>/
 ## 🔐 Your Privacy, Explained
 
 - **We (DAO Message) don't see your deployment.** The Deploy Button takes you to Cloudflare/Vercel/Netlify's own site. We never get your credentials, your repo access, or your analytics.
-- **Your messages are still zero-knowledge.** The PWA talks to the relay server (ours or yours — you can self-host that too) which only relays encrypted blobs. Neither your hosting platform nor the relay can read your chats.
+- **Your messages are still zero-knowledge.** The PWA talks to `relay.daomessage.com`, which only relays encrypted blobs. Neither your hosting platform nor the relay can read your chats.
 - **You own your fork.** The repo lives under your GitHub account. You can modify, extend, or abandon it freely.
 - **Revoke access any time.**
   - GitHub: Settings → Applications → Installed GitHub Apps → Uninstall "Cloudflare Pages" / "Vercel" / "Netlify"
@@ -195,8 +227,6 @@ We try hard to make fork-and-deploy work with zero config. If you see this, it's
 - 这是 relay 的 bug,**不是你部署的问题**
 - 已在 2026-04-21 修复:relay CORS 完全开放,支持任意 origin
 - 如果你还遇到:清浏览器缓存 + 刷新,或者等官方 relay 重新部署
-
-如果你自建了 relay,记得让 CORS echo 任意 origin(不要写白名单)。
 
 ### package-lock.json out of sync / "npm ci EUSAGE"
 
@@ -235,14 +265,7 @@ The template requires Node 20+. Each platform uses a different default:
 
 ### The app loads but can't connect to relay
 
-Check browser DevTools → Console. You'll see messages like "WS connection failed". Possible causes:
-
-- `VITE_API_BASE` is set to a bad URL — unset it to fall back to the official relay
-- Your region blocks the relay server — you can self-host (see below)
-
-### I want my own relay server (full self-hosted)
-
-Relay server source is at `github.com/daomessage/securechat-relay` (coming soon — currently closed-source, on the roadmap to open). Until then, the official relay at `relay.daomessage.com` is the only option. It's zero-knowledge — it can't read your messages.
+Check browser DevTools → Console. You'll see messages like "WS connection failed". Possible cause: your region has connectivity issues with `relay.daomessage.com`. Try switching networks (mobile hotspot vs. WiFi) to confirm. If the issue persists, report it at [github.com/daomessage/securechat-pwa/issues](https://github.com/daomessage/securechat-pwa/issues).
 
 ### How do I update to latest version?
 

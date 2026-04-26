@@ -13,11 +13,12 @@ import { initIMClient, client, getCallModule } from './lib/imClient';
 import { clearIdentity, loadIdentity, deriveIdentity } from '@daomessage_sdk/sdk';
 
 // ⚡ 版本戳：如果 Console 里能看到这行，说明浏览器已加载最新代码
-console.log('🔥 [SecureChat] BUILD v1.0.20 (2026-04-26) loaded');
+console.log('🔥 [SecureChat] BUILD v1.0.22 (2026-04-26) loaded');
 
 function App() {
   const { route, activeChatId, setRoute, setSdkReady, setUserInfo, setActiveChatId, setDeferredPrompt } = useAppStore();
   const [goawayVisible, setGoawayVisible] = useState(false);
+  const [goawayReason, setGoawayReason] = useState<string>('');
 
   // ① 📦 拦截 Chrome PWA 安装事件
   useEffect(() => {
@@ -89,10 +90,78 @@ function App() {
     }
   }, [setActiveChatId, setRoute]);
 
-  // ② GOAWAY 监听：被其他设备踢下线时弹出全屏提示
+  // ② GOAWAY 监听:根据 reason 区分行为
+  //   new_device_login → 真·下线,弹窗 + logout + 跳 welcome
+  //   jwt_revoked      → JWT 被服务端撤销:自动 restoreSession 拿新 JTI 自愈,超 3 次才弹窗
+  //   server_shutdown / network_reset → 静默自动重连,不打扰用户
+  //   其他/未知       → 弹"连接断开"提示,允许重连,不 logout
   useEffect(() => {
-    const sub = client.events.goaway.subscribe((ev) => {
-      if (ev) setGoawayVisible(true);
+    let jwtRevokedHealCount = 0;
+    let newDeviceHealAttempted = false;
+    const sub = client.events.goaway.subscribe(async (ev) => {
+      if (!ev) return;
+      const reason = ev.reason || 'unknown';
+      console.warn('[App] GOAWAY reason=', reason);
+      if (reason === 'server_shutdown' || reason === 'network_reset') {
+        // 良性断开:SDK 自己重连
+        try {
+          await client.disconnect();
+          await new Promise(r => setTimeout(r, 500));
+          await client.connect();
+        } catch (e) {
+          console.warn('[App] auto-reconnect failed:', e);
+        }
+        return;
+      }
+      // P1-E(2026-04-26): new_device_login 收到时先复活一次再 logout。
+      // 服务端 P0-A 已对 same-JTI 不发此 reason,但万一服务端版本未更新仍可能误报,
+      // 客户端先 reconnect 一次:能复活就说明确实是误判;再次被踢才走清身份+logout。
+      if (reason === 'new_device_login' && !newDeviceHealAttempted) {
+        newDeviceHealAttempted = true;
+        console.warn('[App] new_device_login 先尝试复活一次...');
+        try {
+          await client.disconnect();
+          await new Promise(r => setTimeout(r, 500));
+          await client.connect();
+          console.info('[App] new_device_login 复活成功 — 判定为误踢');
+          // 给一段冷却时间,30s 内不再触发复活,避免循环
+          setTimeout(() => { newDeviceHealAttempted = false; }, 30_000);
+        } catch (e) {
+          console.warn('[App] new_device_login 复活失败,真·下线:', e);
+          setGoawayReason(reason);
+          setGoawayVisible(true);
+        }
+        return;
+      }
+      if (reason === 'jwt_revoked') {
+        if (jwtRevokedHealCount >= 3) {
+          console.warn('[App] jwt_revoked 自愈已超 3 次,放弃 → 弹窗');
+          setGoawayReason(reason);
+          setGoawayVisible(true);
+          return;
+        }
+        jwtRevokedHealCount++;
+        console.warn(`[App] jwt_revoked 自愈尝试 #${jwtRevokedHealCount}`);
+        try {
+          await client.disconnect();
+          // 必须强制重新认证(restoreSession 现在是幂等的,不会刷新 JWT)
+          const session = await client.auth.reauthenticate();
+          if (session) {
+            await client.connect();
+            console.info(`[App] jwt_revoked 自愈成功 #${jwtRevokedHealCount}`);
+          } else {
+            setGoawayReason(reason);
+            setGoawayVisible(true);
+          }
+        } catch (e) {
+          console.warn('[App] jwt_revoked 自愈失败:', e);
+          setGoawayReason(reason);
+          setGoawayVisible(true);
+        }
+        return;
+      }
+      setGoawayReason(reason);
+      setGoawayVisible(true);
     });
     return () => sub.unsubscribe();
   }, []);
@@ -190,26 +259,46 @@ function App() {
 
   // GOAWAY 全屏弹窗
   if (goawayVisible) {
+    const isHardKick = goawayReason === 'new_device_login' || goawayReason === 'jwt_revoked';
+    const title = isHardKick
+      ? (goawayReason === 'jwt_revoked' ? '登录凭证已失效' : '已在其他设备登录')
+      : '连接已断开';
+    const desc = goawayReason === 'new_device_login'
+      ? '您的账号已在另一台设备上登录。为保障安全,当前设备已断开连接。'
+      : goawayReason === 'jwt_revoked'
+        ? '登录凭证已失效,请重新登录。'
+        : `服务端断开了连接(原因:${goawayReason})。点击重连。`;
+    const btnLabel = isHardKick ? '确认' : '重连';
     return (
       <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/80 backdrop-blur-sm p-6">
         <div className="bg-zinc-900 rounded-2xl p-8 max-w-sm w-full text-center shadow-2xl border border-zinc-700/50">
-          <div className="text-5xl mb-4">📱</div>
-          <h2 className="text-xl font-bold text-zinc-50 mb-3">已在其他设备登录</h2>
-          <p className="text-zinc-400 text-sm mb-6 leading-relaxed">
-            您的账号已在另一台设备上登录。为保障安全，当前设备已断开连接。
-          </p>
+          <div className="text-5xl mb-4">{isHardKick ? '📱' : '🔌'}</div>
+          <h2 className="text-xl font-bold text-zinc-50 mb-3">{title}</h2>
+          <p className="text-zinc-400 text-sm mb-6 leading-relaxed">{desc}</p>
           <button
             onClick={async () => {
-              await clearIdentity();
-              localStorage.removeItem('sc_nickname');
-              setSdkReady(false);
-              setActiveChatId(null);
               setGoawayVisible(false);
-              setRoute('welcome');
+              if (isHardKick) {
+                // 真·下线:清本地身份并跳 welcome
+                await clearIdentity();
+                localStorage.removeItem('sc_nickname');
+                setSdkReady(false);
+                setActiveChatId(null);
+                setRoute('welcome');
+              } else {
+                // 软下线:尝试重连,保留身份
+                try {
+                  await client.disconnect();
+                  await new Promise(r => setTimeout(r, 500));
+                  await client.connect();
+                } catch (e) {
+                  console.warn('[App] manual reconnect failed:', e);
+                }
+              }
             }}
             className="w-full py-3 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white font-semibold transition-colors"
           >
-            确认
+            {btnLabel}
           </button>
         </div>
       </div>

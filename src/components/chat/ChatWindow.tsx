@@ -72,7 +72,14 @@ export function ChatWindow() {
         if (idx >= 0) { const next = [...prev]; next[idx] = chatMsg; return next; }
         return [...prev, chatMsg];
       });
-      if (!msg.isMe && msg.seq && sessionInfo?.theirAliasId) {
+      // 已读回执守卫:仅当 (1) 对方消息 (2) 页面真的可见(没切到后台/锁屏)
+      // 否则切后台时新消息也会立刻变"已读",和 Android 一样的 bug
+      if (
+        !msg.isMe &&
+        msg.seq &&
+        sessionInfo?.theirAliasId &&
+        document.visibilityState === 'visible'
+      ) {
         client.messages.markAsRead(activeChatId, msg.seq, sessionInfo.theirAliasId);
       }
     };

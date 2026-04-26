@@ -73,8 +73,13 @@ export function ContactsTab() {
 
   useEffect(() => {
     loadData();
-    const timer = setInterval(loadData, 10000);
-    return () => clearInterval(timer);
+    // P0-C(2026-04-26): 用 SDK 推送的 contactsChange 事件替代 10s 轮询。
+    // 之前服务端在好友请求/接受时已经 PublishCore 到 NATS,但 gateway 没订阅,
+    // 客户端只能靠轮询。现在事件链补齐 → 收到事件后零延迟刷新好友列表。
+    const sub = client.events.contactsChange.subscribe((ev) => {
+      if (ev) loadData();
+    });
+    return () => sub.unsubscribe();
   }, []);
 
   const handleSearch = async (overrideId?: string) => {

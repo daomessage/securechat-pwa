@@ -81,12 +81,43 @@ export function CallScreen() {
   //   可能 ref.current 仍是 null (元素未 mount) → effect 后续不重跑就永远挂不上
   // 加 play() 兜底 iOS Safari autoplay 拦截
   useEffect(() => {
-    if (!localVideoRef.current || !localStream) return;
+    if (!localVideoRef.current || !localStream) {
+      console.warn(`[CallScreen] local effect: ref=${!!localVideoRef.current} stream=${!!localStream} state=${callState} isVideo=${isVideo}`);
+      return;
+    }
     if (localVideoRef.current.srcObject !== localStream) {
+      console.warn(`[CallScreen] local attach: tracks=audio:${localStream.getAudioTracks().length} video:${localStream.getVideoTracks().length}`);
       localVideoRef.current.srcObject = localStream;
       localVideoRef.current.play().catch(e => console.warn('[CallScreen] local autoplay blocked:', e));
     }
   }, [localStream, callState, isVideo]);
+
+  // 兜底:某些时序下 BehaviorSubject 的初始 null 值压到了 setLocalStream,
+  // 之后虽然 SDK emit 了真实 stream 但 React state 可能因为 batch 没 sync。
+  // connected 后强制从 SDK 同步取一次 localStream,如果 ref 还没贴就立刻贴。
+  useEffect(() => {
+    if (callState !== 'connected' || !isVideo) return;
+    const tryAttachLocal = () => {
+      const mod = getCallModule();
+      const stream = mod?.getLocalStream();
+      if (!stream || !localVideoRef.current) return false;
+      if (localVideoRef.current.srcObject !== stream) {
+        console.warn('[CallScreen] local fallback attach (poll-based)');
+        localVideoRef.current.srcObject = stream;
+        localVideoRef.current.play().catch(e => console.warn('[CallScreen] local fallback play blocked:', e));
+      }
+      return true;
+    };
+    // 立刻试一次
+    if (tryAttachLocal()) return;
+    // 不行就 250ms 间隔轮询 5 次(最多 1.25s),覆盖 useEffect 时序竞态
+    let n = 0;
+    const id = setInterval(() => {
+      n++;
+      if (tryAttachLocal() || n >= 5) clearInterval(id);
+    }, 250);
+    return () => clearInterval(id);
+  }, [callState, isVideo]);
 
   // remote 同理,attach 到大窗 video + 独立 audio 元素(autoplay 被拦时兜底)
   useEffect(() => {

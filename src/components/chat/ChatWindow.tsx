@@ -362,11 +362,25 @@ export function ChatWindow() {
                   )}>
                     <span>{formatTime(m.time)}</span>
                     {m.isMe && (
-                      <span className="flex items-center ml-1">
+                      <span className="flex items-center ml-1 gap-0.5">
+                        {/* 状态图标设计:
+                            - sending:Clock(发送中)
+                            - sent / delivered:✓ 单勾灰 — 不区分"服务端收到"和"对方设备收到"
+                              (这两个差别用户分不清,跟 iMessage/Telegram 一样合并显示)
+                            - read:✓✓ 双勾亮蓝 + 「已读」文字 — 与上面拉开视觉差距
+                              (避免"双勾 = 已读"的直觉错位 — 之前 delivered 也用双勾导致用户
+                               以为已读,实则只是已送达)
+                            - failed:红字 */}
                         {m.status === 'sending' && <Clock className="w-3 h-3" />}
-                        {m.status === 'sent' && <Check className="w-3 h-3" />}
-                        {m.status === 'delivered' && <CheckCheck className="w-3 h-3 opacity-60" />}
-                        {m.status === 'read' && <CheckCheck className="w-3 h-3 text-cyan-300" />}
+                        {(m.status === 'sent' || m.status === 'delivered') && (
+                          <Check className="w-3 h-3 opacity-60" />
+                        )}
+                        {m.status === 'read' && (
+                          <>
+                            <CheckCheck className="w-3 h-3 text-sky-400" />
+                            <span className="text-[10px] text-sky-400 leading-none">已读</span>
+                          </>
+                        )}
                         {m.status === 'failed' && <span className="text-red-400">发送失败</span>}
                       </span>
                     )}

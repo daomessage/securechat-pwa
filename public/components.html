@@ -1,0 +1,197 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>DAO Message · 组件库展示</title>
+  <meta name="description" content="DAO Message PWA 设计系统组件预览(对应 design tokens)" />
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --bg-0: #09090b; --bg-1: #18181b; --bg-2: #27272a;
+      --fg-0: #fafafa; --fg-1: #d4d4d8; --fg-2: #a1a1aa; --fg-3: #71717a;
+      --border: #27272a;
+      --indigo: #3b82f6; --indigo-hover: #2563eb;
+      --violet: #8b5cf6; --purple: #a855f7;
+      --danger: #ef4444; --success: #22c55e; --warning: #fbbf24;
+    }
+    html, body { background: var(--bg-0); color: var(--fg-0); font-family: -apple-system, BlinkMacSystemFont, "PingFang SC", "Microsoft YaHei", sans-serif; min-height: 100vh; }
+    nav { position: sticky; top: 0; background: rgba(9,9,11,.85); backdrop-filter: blur(8px); border-bottom: 1px solid var(--border); padding: 12px 24px; z-index: 10; }
+    nav h1 { font-size: 14px; color: var(--fg-2); font-weight: 600; }
+    nav h1 b { color: var(--fg-0); }
+    main { max-width: 1024px; margin: 0 auto; padding: 24px; display: flex; flex-direction: column; gap: 32px; }
+    section { background: var(--bg-1); border: 1px solid var(--border); border-radius: 16px; padding: 24px; }
+    h2 { font-size: 18px; font-weight: 600; margin-bottom: 16px; display: flex; align-items: center; gap: 8px; }
+    h2 .badge { font-size: 10px; padding: 2px 8px; border-radius: 4px; background: var(--bg-2); color: var(--fg-2); font-weight: 400; font-family: "SF Mono", Consolas, monospace; }
+    h3 { font-size: 14px; color: var(--fg-2); margin: 16px 0 8px; font-weight: 500; }
+    .row { display: flex; gap: 16px; align-items: center; flex-wrap: wrap; }
+    .stack { display: flex; flex-direction: column; gap: 8px; max-width: 320px; }
+    .specs { font-size: 12px; color: var(--fg-3); margin-top: 8px; font-family: "SF Mono", Consolas, monospace; }
+    code { background: var(--bg-2); color: var(--fg-1); padding: 2px 6px; border-radius: 4px; font-size: 12px; font-family: "SF Mono", Consolas, monospace; }
+
+    /* === 组件: Avatar === */
+    .avatar { display: inline-flex; align-items: center; justify-content: center; border-radius: 9999px; color: white; font-weight: 700; background: linear-gradient(135deg, #3B82F6, #8B5CF6 50%, #A855F7); }
+    .avatar-sm { width: 32px; height: 32px; font-size: 13px; }
+    .avatar-md { width: 48px; height: 48px; font-size: 19px; }
+    .avatar-lg { width: 80px; height: 80px; font-size: 32px; }
+    .avatar-xl { width: 96px; height: 96px; font-size: 38px; }
+
+    /* === 组件: Button === */
+    .btn { height: 48px; padding: 0 24px; border-radius: 8px; border: none; font-size: 16px; font-weight: 500; cursor: pointer; transition: all .15s; }
+    .btn:active { transform: scale(0.95); }
+    .btn-primary { background: var(--indigo); color: white; }
+    .btn-primary:hover { background: var(--indigo-hover); }
+    .btn-secondary { background: var(--bg-2); color: var(--fg-0); }
+    .btn-secondary:hover { background: #3F3F46; }
+    .btn-danger { background: var(--danger); color: white; }
+    .btn-ghost { background: transparent; color: var(--fg-1); }
+    .btn-ghost:hover { background: var(--bg-2); }
+
+    /* === 组件: MessageBubble === */
+    .bubble-row { display: flex; gap: 8px; margin: 4px 0; max-width: 480px; }
+    .bubble-row.me { justify-content: flex-end; }
+    .bubble { max-width: 75%; padding: 12px 16px; font-size: 14px; }
+    .bubble.me { background: var(--indigo); color: white; border-radius: 16px 16px 4px 16px; }
+    .bubble.them { background: var(--bg-2); color: var(--fg-0); border-radius: 16px 16px 16px 4px; border: 1px solid rgba(82,82,91,.3); }
+
+    /* === 组件: Card === */
+    .card { background: var(--bg-1); border: 1px solid var(--border); border-radius: 12px; padding: 20px; }
+
+    /* === 组件: Input === */
+    .input { height: 48px; width: 100%; max-width: 320px; padding: 0 16px; border-radius: 8px; background: var(--bg-1); border: 1px solid var(--border); color: var(--fg-0); font-size: 14px; outline: none; }
+    .input:focus { border-color: var(--indigo); }
+    .chat-input { height: 44px; width: 100%; max-width: 320px; padding: 0 16px; border-radius: 16px; background: var(--bg-1); border: 1px solid var(--border); color: var(--fg-0); font-size: 14px; outline: none; }
+    .chat-input:focus { border-color: var(--indigo); }
+
+    /* === 组件: Banner === */
+    .banner { padding: 6px 16px; text-align: center; font-size: 12px; font-weight: 500; color: white; }
+    .banner-danger { background: var(--danger); }
+    .banner-warning { background: rgba(251,191,36,0.9); color: #422006; }
+    .banner-success { background: var(--success); }
+
+    /* === 组件: Tab === */
+    .tab-bar { display: flex; height: 56px; background: var(--bg-1); border-top: 1px solid var(--border); padding: 0 16px; max-width: 480px; }
+    .tab-btn { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; color: var(--fg-3); font-size: 12px; gap: 2px; cursor: pointer; }
+    .tab-btn.active { color: var(--indigo); }
+    .tab-btn .icon { width: 24px; height: 24px; display: inline-block; }
+
+    /* 调色板 */
+    .palette { display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 8px; }
+    .swatch { display: flex; flex-direction: column; gap: 4px; padding: 12px; border-radius: 8px; background: var(--bg-2); }
+    .swatch-color { height: 40px; border-radius: 6px; border: 1px solid var(--border); }
+    .swatch-name { font-size: 11px; font-weight: 600; }
+    .swatch-hex { font-size: 10px; color: var(--fg-2); font-family: "SF Mono", Consolas, monospace; }
+  </style>
+</head>
+<body>
+
+<nav>
+  <h1><b>DAO Message</b> · 组件库展示 · 对应 docs/DESIGN_TOKENS.md</h1>
+</nav>
+
+<main>
+
+  <!-- 调色板 -->
+  <section>
+    <h2>1. 调色板 <span class="badge">color tokens</span></h2>
+    <h3>背景</h3>
+    <div class="palette">
+      <div class="swatch"><div class="swatch-color" style="background:#09090b"></div><span class="swatch-name">bg.base</span><span class="swatch-hex">#09090B · zinc-950</span></div>
+      <div class="swatch"><div class="swatch-color" style="background:#18181b"></div><span class="swatch-name">bg.surface</span><span class="swatch-hex">#18181B · zinc-900</span></div>
+      <div class="swatch"><div class="swatch-color" style="background:#27272a"></div><span class="swatch-name">bg.surface-raised</span><span class="swatch-hex">#27272A · zinc-800</span></div>
+    </div>
+    <h3 style="margin-top:24px">文字</h3>
+    <div class="palette">
+      <div class="swatch"><div class="swatch-color" style="background:#fafafa"></div><span class="swatch-name">text.primary</span><span class="swatch-hex">#FAFAFA · zinc-50</span></div>
+      <div class="swatch"><div class="swatch-color" style="background:#d4d4d8"></div><span class="swatch-name">text.secondary</span><span class="swatch-hex">#D4D4D8 · zinc-300</span></div>
+      <div class="swatch"><div class="swatch-color" style="background:#a1a1aa"></div><span class="swatch-name">text.muted</span><span class="swatch-hex">#A1A1AA · zinc-400</span></div>
+      <div class="swatch"><div class="swatch-color" style="background:#71717a"></div><span class="swatch-name">text.disabled</span><span class="swatch-hex">#71717A · zinc-500</span></div>
+    </div>
+    <h3 style="margin-top:24px">品牌 / 状态</h3>
+    <div class="palette">
+      <div class="swatch"><div class="swatch-color" style="background:#3b82f6"></div><span class="swatch-name">brand.primary</span><span class="swatch-hex">#3B82F6 · blue-500</span></div>
+      <div class="swatch"><div class="swatch-color" style="background:#2563eb"></div><span class="swatch-name">brand.primary-hover</span><span class="swatch-hex">#2563EB · blue-600</span></div>
+      <div class="swatch"><div class="swatch-color" style="background:#ef4444"></div><span class="swatch-name">status.danger</span><span class="swatch-hex">#EF4444 · red-500</span></div>
+      <div class="swatch"><div class="swatch-color" style="background:#22c55e"></div><span class="swatch-name">status.success</span><span class="swatch-hex">#22C55E · green-500</span></div>
+      <div class="swatch"><div class="swatch-color" style="background:#fbbf24"></div><span class="swatch-name">status.warning</span><span class="swatch-hex">#FBBF24 · amber-400</span></div>
+    </div>
+  </section>
+
+  <!-- Avatar -->
+  <section>
+    <h2>2. Avatar <span class="badge">gradient blue → violet → purple</span></h2>
+    <div class="row">
+      <div class="avatar avatar-sm">DA</div>
+      <div class="avatar avatar-md">DA</div>
+      <div class="avatar avatar-lg">DA</div>
+      <div class="avatar avatar-xl">DA</div>
+    </div>
+    <p class="specs">size: <code>sm=32 / md=48 / lg=80 / xl=96</code> · 字号 = size × 0.4</p>
+  </section>
+
+  <!-- Button -->
+  <section>
+    <h2>3. Button <span class="badge">h=48 / radius.lg=8 / px=24</span></h2>
+    <div class="stack">
+      <button class="btn btn-primary">创建新账户</button>
+      <button class="btn btn-secondary">恢复已有账户</button>
+      <button class="btn btn-danger">挂断</button>
+      <button class="btn btn-ghost">取消</button>
+    </div>
+    <p class="specs">variants: <code>primary | secondary | danger | ghost</code></p>
+  </section>
+
+  <!-- Input -->
+  <section>
+    <h2>4. Input</h2>
+    <h3>表单输入(radius.lg)</h3>
+    <input class="input" placeholder="昵称 / 助记词 / 搜索..." />
+    <h3>聊天输入(radius.2xl pill)</h3>
+    <input class="chat-input" placeholder="输入消息..." />
+  </section>
+
+  <!-- MessageBubble -->
+  <section>
+    <h2>5. Message Bubble <span class="badge">max-w 75% · px-4 py-3</span></h2>
+    <div class="bubble-row">
+      <div class="bubble them">你好,这是对方消息。气泡左下角是 4px 尖角,指向消息底部。</div>
+    </div>
+    <div class="bubble-row me">
+      <div class="bubble me">这是我自己消息。气泡右下角是 4px 尖角,品牌色背景。</div>
+    </div>
+  </section>
+
+  <!-- TabBar -->
+  <section>
+    <h2>6. Tab Bar <span class="badge">h=56 · 图标 24 / 文字 text-xs(12)</span></h2>
+    <div class="tab-bar">
+      <div class="tab-btn active"><span class="icon">💬</span><span>会话</span></div>
+      <div class="tab-btn"><span class="icon">#</span><span>频道</span></div>
+      <div class="tab-btn"><span class="icon">👥</span><span>联系人</span></div>
+      <div class="tab-btn"><span class="icon">⚙️</span><span>设置</span></div>
+    </div>
+  </section>
+
+  <!-- NetworkBanner -->
+  <section>
+    <h2>7. Network Banner <span class="badge">三端统一行为</span></h2>
+    <div class="stack" style="max-width:480px">
+      <div class="banner banner-danger">网络连接已断开,请检查网络设置</div>
+      <div class="banner banner-warning">⏳ 正在重新连接...</div>
+      <div class="banner banner-success">✅ 网络已恢复</div>
+    </div>
+  </section>
+
+  <!-- Card -->
+  <section>
+    <h2>8. Card</h2>
+    <div class="card">
+      <h3 style="margin:0 0 8px;color:var(--fg-0);font-size:16px">卡片标题</h3>
+      <p style="font-size:13px;color:var(--fg-2);line-height:1.6">卡片内容。背景 surface (zinc-900),边框 border.default (zinc-800),圆角 12,内边距 20。</p>
+    </div>
+  </section>
+
+</main>
+
+</body>
+</html>

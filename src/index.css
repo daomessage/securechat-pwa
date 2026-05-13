@@ -1,0 +1,183 @@
+@import "tailwindcss";
+
+/* ══════════════════════════════════════════════════════════════
+ * PWA 跨平台适配(iOS 刘海 + Android 手势区 + 桌面标准浏览器)
+ * ══════════════════════════════════════════════════════════════ */
+
+/* 1) Safe Area 变量 — iOS/Android standalone 模式下自动读到硬件凹陷 */
+:root {
+  --safe-top:    env(safe-area-inset-top, 0px);
+  --safe-right:  env(safe-area-inset-right, 0px);
+  --safe-bottom: env(safe-area-inset-bottom, 0px);
+  --safe-left:   env(safe-area-inset-left, 0px);
+}
+
+/* 2) 全局 html/body — 阻止橡皮筋 + 填满屏幕 + 背景色避免白闪 */
+html, body {
+  height: 100%;
+  background-color: #09090b; /* zinc-950 */
+  overscroll-behavior: none;  /* 两轴都禁止,防止 iOS/Android 下拉出浏览器自身的刷新手势 */
+}
+
+body {
+  margin: 0;
+  /* 允许内部容器自行决定滚动 */
+  overflow: hidden;
+}
+
+/* 3) Safe Area 工具类 — Tailwind 没内置,手写一批常用 */
+.pt-safe      { padding-top:    var(--safe-top); }
+.pb-safe      { padding-bottom: var(--safe-bottom); }
+.pl-safe      { padding-left:   var(--safe-left); }
+.pr-safe      { padding-right:  var(--safe-right); }
+.px-safe      { padding-left:   var(--safe-left); padding-right: var(--safe-right); }
+.py-safe      { padding-top:    var(--safe-top);  padding-bottom: var(--safe-bottom); }
+.mt-safe      { margin-top:     var(--safe-top); }
+.mb-safe      { margin-bottom:  var(--safe-bottom); }
+.inset-safe   { top: var(--safe-top); bottom: var(--safe-bottom); left: var(--safe-left); right: var(--safe-right); }
+
+/* 4) 滚动容器 — 允许纵向滚动但阻止边界冒泡 */
+.scroll-contain {
+  overscroll-behavior-y: contain;
+  -webkit-overflow-scrolling: touch;
+}
+
+/* 5) iOS PWA 状态栏 — black-translucent 下文字默认白色 */
+@supports (padding-top: constant(safe-area-inset-top)) {
+  :root {
+    --safe-top:    constant(safe-area-inset-top);
+    --safe-bottom: constant(safe-area-inset-bottom);
+  }
+}
+
+/* 6) 键盘弹起时的视口高度 — 由 JS(useVisualViewport)写入 --vv-height */
+.vv-height {
+  height: var(--vv-height, 100vh);
+}
+
+/* 7) 禁用用户选中(App 内容交互感更强),但聊天消息/输入框仍可选 */
+body {
+  -webkit-user-select: none;
+  user-select: none;
+  -webkit-tap-highlight-color: transparent;
+}
+input, textarea, [contenteditable], .selectable {
+  -webkit-user-select: text;
+  user-select: text;
+}
+
+/* 8) 防止 iOS 双击放大 */
+button, a, [role="button"] {
+  touch-action: manipulation;
+}
+
+
+/* ── Channel Markdown 暗色排版 ──────────────────────── */
+.channel-markdown {
+  color: #e4e4e7; /* zinc-200 */
+  font-size: 15px;
+  line-height: 1.75;
+}
+.channel-markdown h1 {
+  font-size: 1.5em;
+  font-weight: 700;
+  margin: 1em 0 0.5em;
+  padding-bottom: 0.3em;
+  border-bottom: 1px solid #27272a;
+  color: #fafafa;
+}
+.channel-markdown h2 {
+  font-size: 1.3em;
+  font-weight: 700;
+  margin: 0.8em 0 0.4em;
+  color: #fafafa;
+}
+.channel-markdown h3 {
+  font-size: 1.1em;
+  font-weight: 600;
+  margin: 0.6em 0 0.3em;
+  color: #f4f4f5;
+}
+.channel-markdown p {
+  margin: 0.6em 0;
+}
+.channel-markdown ul, .channel-markdown ol {
+  padding-left: 1.5em;
+  margin: 0.5em 0;
+}
+.channel-markdown ul { list-style-type: disc; }
+.channel-markdown ol { list-style-type: decimal; }
+.channel-markdown li {
+  margin: 0.25em 0;
+}
+.channel-markdown li input[type="checkbox"] {
+  margin-right: 0.4em;
+  accent-color: #6366f1;
+}
+.channel-markdown blockquote {
+  border-left: 3px solid #6366f1;
+  padding: 0.4em 1em;
+  margin: 0.6em 0;
+  background: rgba(99, 102, 241, 0.06);
+  color: #a1a1aa;
+  border-radius: 0 8px 8px 0;
+}
+.channel-markdown code {
+  background: #18181b;
+  color: #a78bfa;
+  padding: 0.15em 0.4em;
+  border-radius: 4px;
+  font-size: 0.9em;
+  font-family: 'SF Mono', 'Fira Code', monospace;
+}
+.channel-markdown pre {
+  background: #09090b;
+  border: 1px solid #27272a;
+  border-radius: 12px;
+  padding: 1em;
+  overflow-x: auto;
+  margin: 0.8em 0;
+}
+.channel-markdown pre code {
+  background: transparent;
+  padding: 0;
+  color: #d4d4d8;
+}
+.channel-markdown table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 0.8em 0;
+  font-size: 0.9em;
+}
+.channel-markdown th {
+  background: #18181b;
+  font-weight: 600;
+  text-align: left;
+  padding: 0.5em 0.8em;
+  border: 1px solid #27272a;
+  color: #e4e4e7;
+}
+.channel-markdown td {
+  padding: 0.5em 0.8em;
+  border: 1px solid #27272a;
+}
+.channel-markdown hr {
+  border: none;
+  border-top: 1px solid #27272a;
+  margin: 1.2em 0;
+}
+.channel-markdown a {
+  color: #818cf8;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+.channel-markdown a:hover {
+  color: #a5b4fc;
+}
+.channel-markdown img {
+  max-width: 100%;
+  border-radius: 8px;
+  margin: 0.6em 0;
+}
+.channel-markdown strong { color: #fafafa; }
+.channel-markdown del { color: #71717a; }

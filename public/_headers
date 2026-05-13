@@ -1,0 +1,53 @@
+# ══════════════════════════════════════════════════════════════
+# Cloudflare Pages - HTTP Headers 配置
+# ══════════════════════════════════════════════════════════════
+
+# Service Worker 必须实时获取最新版本,否则用户会卡在旧版本
+/sw.js
+  Cache-Control: no-cache, no-store, must-revalidate
+  Service-Worker-Allowed: /
+
+# PWA Manifest 配适中缓存
+/manifest.webmanifest
+  Cache-Control: public, max-age=86400
+  Content-Type: application/manifest+json
+
+# Vite 产物带 hash,永久缓存
+/assets/*
+  Cache-Control: public, max-age=31536000, immutable
+
+# 图标/截图,1 天缓存
+/pwa-*.png
+  Cache-Control: public, max-age=86400
+/apple-touch-icon.png
+  Cache-Control: public, max-age=86400
+/favicon*
+  Cache-Control: public, max-age=86400
+
+# HTML 不缓存,保证新版本推送及时
+/index.html
+  Cache-Control: no-cache, no-store, must-revalidate
+/
+  Cache-Control: no-cache, no-store, must-revalidate
+
+# /install 决策页 (纯静态, inline script 用于 iOS 检测 + webclip 跳转)
+# 需要比 SPA 更宽松的 CSP 允许 inline <script> 和 <style>
+# 注意: 路径要写 /install (无后缀), 因为 /install.html 在请求时被 308 → /install
+/install
+  Cache-Control: no-cache, no-store, must-revalidate
+  Content-Security-Policy: default-src 'self'; script-src 'self' 'unsafe-inline' https://static.cloudflareinsights.com; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https:; font-src 'self' data:; connect-src 'self' https://relay.daomessage.com https://cloudflareinsights.com; frame-ancestors 'none'; base-uri 'self'; form-action 'self'
+/install.html
+  Cache-Control: no-cache, no-store, must-revalidate
+  Content-Security-Policy: default-src 'self'; script-src 'self' 'unsafe-inline' https://static.cloudflareinsights.com; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https:; font-src 'self' data:; connect-src 'self' https://relay.daomessage.com https://cloudflareinsights.com; frame-ancestors 'none'; base-uri 'self'; form-action 'self'
+
+# ── 安全头(对齐 docs/SECURITY_HARDENING.md P3 加固)──
+/*
+  X-Frame-Options: DENY
+  X-Content-Type-Options: nosniff
+  Referrer-Policy: strict-origin-when-cross-origin
+  Permissions-Policy: camera=(self), microphone=(self), geolocation=(), payment=(), usb=(), magnetometer=()
+  Strict-Transport-Security: max-age=31536000; includeSubDomains; preload
+  # CSP: 允许连接到 relay.daomessage.com(API + WS) 和 TURN STUN 服务器
+  # media-src 允许 data: 是因为 @yudiel/react-qr-scanner 的成功提示音是 base64 data URI
+  # CF Pages 自动注入 https://static.cloudflareinsights.com/beacon.min.js (Web Analytics), 加到 allowlist
+  Content-Security-Policy: default-src 'self'; script-src 'self' 'wasm-unsafe-eval' https://static.cloudflareinsights.com; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; font-src 'self' data:; connect-src 'self' https://relay.daomessage.com wss://relay.daomessage.com https://*.relay.daomessage.com https://cloudflareinsights.com; media-src 'self' blob: data:; worker-src 'self' blob:; frame-ancestors 'none'; base-uri 'self'; form-action 'self'; manifest-src 'self'
